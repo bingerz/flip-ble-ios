@@ -5,6 +5,8 @@ platform :ios, '10.0'
 target 'Flip-BLE_Example' do
   pod 'Flip-BLE', :path => '../'
 
+  pod 'SnapKit', '~> 5.0.1'
+  
   target 'Flip-BLE_Tests' do
     inherit! :search_paths
 

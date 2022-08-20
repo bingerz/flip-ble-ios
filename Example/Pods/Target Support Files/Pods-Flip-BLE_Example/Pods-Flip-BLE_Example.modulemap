@@ -1,0 +1,6 @@
+framework module Pods_Flip_BLE_Example {
+  umbrella header "Pods-Flip-BLE_Example-umbrella.h"
+
+  export *
+  module * { export * }
+}
