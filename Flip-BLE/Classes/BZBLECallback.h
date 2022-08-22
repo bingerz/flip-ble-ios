@@ -9,9 +9,8 @@
 #define BZBLECallback_h
 
 #import <Foundation/Foundation.h>
+#import <CoreBluetooth/CoreBluetooth.h>
 #import "BZPeripheral.h"
-
-@class BZPeripheral;
 
 typedef void (^DiscoverCallback)(BZPeripheral *peripheral, NSError *error);
 typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error);
