@@ -11,8 +11,6 @@
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "BZConnectStateDelegate.h"
-#import "BZPeripheralController.h"
-#import "BZBLECallback.h"
 
 typedef NS_ENUM(NSInteger, BZPeripheralState) {
     BZPeripheralStateDisconnected = 0,
@@ -22,6 +20,14 @@ typedef NS_ENUM(NSInteger, BZPeripheralState) {
     BZPeripheralStateDiscovered,
     BZPeripheralStateDisconnecting
 };
+
+typedef void (^DiscoverCallback)(BZPeripheral *peripheral, NSError *error);
+typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error);
+typedef void (^DiscoverCharactCallback)(CBService *service, NSError *error);
+typedef void (^RSSICallback)(NSNumber *value, NSError *error);
+typedef void (^NotifyCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^ReadCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 
 @interface BZPeripheral : NSObject <CBPeripheralDelegate>
 

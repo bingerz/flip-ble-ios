@@ -11,7 +11,6 @@
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "BZPeripheral.h"
-#import "BZBLECallback.h"
 
 @interface BZPeripheralController : NSObject
 

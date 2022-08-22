@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Flip-BLE'
-  s.version          = '0.1.3'
+  s.version          = '0.1.4'
   s.summary          = 'An easy-to-use Bluetooth development framework for the iOS platform.'
 
 # This description is used to generate tags and improve search results.
@@ -31,6 +31,8 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '10.0'
 
   s.source_files = 'Flip-BLE/Classes/**/*'
+  
+  s.requires_arc = true
   
   # s.resource_bundles = {
   #   'Flip-BLE' => ['Flip-BLE/Assets/*.png']

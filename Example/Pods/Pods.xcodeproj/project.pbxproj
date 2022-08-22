@@ -36,7 +36,6 @@
 		55E842D9931AC67C8CEF6BF4634E303E /* BZBLEUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = CDB6D972D19FCF35C6F1C5F4E3D07CBE /* BZBLEUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5BE525FF6FA14B999ED2CCC0AA4FA0CF /* FBSnapshotTestCase-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 866D9FE755DFCE449D56D638ACF5F7EE /* FBSnapshotTestCase-dummy.m */; };
 		5E8BA529DFB4529006967624044FEC1C /* ConstraintViewDSL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF982B0AB8775FBDCD55E52E1FA5CCD /* ConstraintViewDSL.swift */; };
-		62EA4D0DB1AF3BC7A30E627D43CBFAA6 /* BZBLECallback.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EB09B3EDCC8945081198A5BD4F65545 /* BZBLECallback.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		62F299B4704A7C95FB5866C6CDE2E2FD /* ConstraintOffsetTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5342EFD92EE77D664D900843E89ACC /* ConstraintOffsetTarget.swift */; };
 		63FBE908CB69307B6E3FACA405571A4F /* CBObject+BZAddition.m in Sources */ = {isa = PBXBuildFile; fileRef = 81FA17536AD7BDB56DB411850FEAC9A3 /* CBObject+BZAddition.m */; };
 		640CCE9C3A28AA3CA15510899F9140EE /* FBSnapshotTestCasePlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = 41BCA10EE0C1AEAC72EE1ED20023B819 /* FBSnapshotTestCasePlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -134,7 +133,6 @@
 		0C02B611F6EAC461D3DD07AB2523C59F /* BZBLEError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BZBLEError.h; path = "Flip-BLE/Classes/BZBLEError.h"; sourceTree = "<group>"; };
 		0D64EAEA1061102014847B6CB57C8F18 /* BZConnectStateDelegate.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BZConnectStateDelegate.h; path = "Flip-BLE/Classes/BZConnectStateDelegate.h"; sourceTree = "<group>"; };
 		0E5522EC8A3B03A5DEA6F061E90FE707 /* BZScanDelegate.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BZScanDelegate.h; path = "Flip-BLE/Classes/BZScanDelegate.h"; sourceTree = "<group>"; };
-		0EB09B3EDCC8945081198A5BD4F65545 /* BZBLECallback.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BZBLECallback.h; path = "Flip-BLE/Classes/BZBLECallback.h"; sourceTree = "<group>"; };
 		102283BD1D1F7C50E05C589FC70F2C82 /* LayoutConstraint.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LayoutConstraint.swift; path = Source/LayoutConstraint.swift; sourceTree = "<group>"; };
 		1120642163CB7AD869BFBE3D6CCFE61B /* ConstraintDirectionalInsetTarget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintDirectionalInsetTarget.swift; path = Source/ConstraintDirectionalInsetTarget.swift; sourceTree = "<group>"; };
 		12C8AAEC7C779463138F5962B583E774 /* ConstraintPriority.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintPriority.swift; path = Source/ConstraintPriority.swift; sourceTree = "<group>"; };
@@ -142,7 +140,7 @@
 		14D18CB3407C66E7EB0D9C8D2AC36AEF /* SwiftSupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SwiftSupport.swift; path = FBSnapshotTestCase/SwiftSupport.swift; sourceTree = "<group>"; };
 		14F92B62A14B28B323404C324B449E7F /* ConstraintRelation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintRelation.swift; path = Source/ConstraintRelation.swift; sourceTree = "<group>"; };
 		19946F1595F2D7AEB2C518E751164FCD /* SnapKit-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "SnapKit-Info.plist"; sourceTree = "<group>"; };
-		1B50FB7EDF21432646DF7322FA438770 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		1B50FB7EDF21432646DF7322FA438770 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1CD51E01601308359DCC67F3B97280D7 /* Pods-Flip-BLE_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-Flip-BLE_Tests-umbrella.h"; sourceTree = "<group>"; };
 		1DA24A38BA9EE106B59E3D4C8DD1CE0E /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		21214E4A449109C19A88CBE70E1CD7AF /* ConstraintLayoutSupportDSL.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintLayoutSupportDSL.swift; path = Source/ConstraintLayoutSupportDSL.swift; sourceTree = "<group>"; };
@@ -150,7 +148,7 @@
 		21842211D951E6EC0201FD139E0790FF /* ConstraintMaker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintMaker.swift; path = Source/ConstraintMaker.swift; sourceTree = "<group>"; };
 		2432BEA89B4175D46498BF19DF823FA5 /* ConstraintInsets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintInsets.swift; path = Source/ConstraintInsets.swift; sourceTree = "<group>"; };
 		243EFDA77A8CDE727E43BE79E3D4A672 /* Pods-Flip-BLE_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-Flip-BLE_Example-umbrella.h"; sourceTree = "<group>"; };
-		2483DC3B3D93693EA75761035F2954AB /* Flip-BLE.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = "Flip-BLE.podspec"; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		2483DC3B3D93693EA75761035F2954AB /* Flip-BLE.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = "Flip-BLE.podspec"; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		28D4CD794A4FDC9C47F4B8504528663F /* ConstraintLayoutGuideDSL.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintLayoutGuideDSL.swift; path = Source/ConstraintLayoutGuideDSL.swift; sourceTree = "<group>"; };
 		293AD1AAFC0D4F1D4155B71D134266B7 /* ConstraintView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintView.swift; path = Source/ConstraintView.swift; sourceTree = "<group>"; };
 		2D3B3F7A884C78904E58D664ED68A3FF /* Flip-BLE-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Flip-BLE-dummy.m"; sourceTree = "<group>"; };
@@ -163,7 +161,7 @@
 		3F21542A6F2768B9B0233BB488C07678 /* UIApplication+StrictKeyWindow.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UIApplication+StrictKeyWindow.m"; path = "FBSnapshotTestCase/Categories/UIApplication+StrictKeyWindow.m"; sourceTree = "<group>"; };
 		41BCA10EE0C1AEAC72EE1ED20023B819 /* FBSnapshotTestCasePlatform.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FBSnapshotTestCasePlatform.h; path = FBSnapshotTestCase/FBSnapshotTestCasePlatform.h; sourceTree = "<group>"; };
 		437CCE3385B661A0A48ACF4B07063D96 /* SnapKit.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = SnapKit.modulemap; sourceTree = "<group>"; };
-		4666578494C86883479171E91BE43949 /* Flip-BLE */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Flip-BLE"; path = Flip_BLE.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4666578494C86883479171E91BE43949 /* Flip_BLE.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Flip_BLE.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4674477C145D23117042F5DF1F9B3FB7 /* FBSnapshotTestCasePlatform.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FBSnapshotTestCasePlatform.m; path = FBSnapshotTestCase/FBSnapshotTestCasePlatform.m; sourceTree = "<group>"; };
 		4FF982B0AB8775FBDCD55E52E1FA5CCD /* ConstraintViewDSL.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintViewDSL.swift; path = Source/ConstraintViewDSL.swift; sourceTree = "<group>"; };
 		526364CC6F0D7CE0944D09781EF22BAD /* BZBLEUtils.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BZBLEUtils.m; path = "Flip-BLE/Classes/BZBLEUtils.m"; sourceTree = "<group>"; };
@@ -203,7 +201,7 @@
 		9B089590F4D105863658870EF7C0923A /* FBSnapshotTestCase.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FBSnapshotTestCase.h; path = FBSnapshotTestCase/FBSnapshotTestCase.h; sourceTree = "<group>"; };
 		9B5D66012D2C62FDF0A0C8DDF659DD36 /* ConstraintDirectionalInsets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintDirectionalInsets.swift; path = Source/ConstraintDirectionalInsets.swift; sourceTree = "<group>"; };
 		9BB8FC618E01CFE4911BD64AE554BE98 /* Pods-Flip-BLE_Example-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Flip-BLE_Example-Info.plist"; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		A118DEE1BAFB8AF2F40B80A87B5C5CD4 /* ConstraintDescription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintDescription.swift; path = Source/ConstraintDescription.swift; sourceTree = "<group>"; };
 		A38331331EDA1537B8644B0E9B773C34 /* UIImage+Compare.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UIImage+Compare.m"; path = "FBSnapshotTestCase/Categories/UIImage+Compare.m"; sourceTree = "<group>"; };
 		A3ED6F9C6860C745E84CCFDBFFA9DEDD /* FBSnapshotTestCase.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = FBSnapshotTestCase.debug.xcconfig; sourceTree = "<group>"; };
@@ -243,7 +241,7 @@
 		F72E01D910A8ECC4AC6B92684DB964AB /* Pods-Flip-BLE_Example */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-Flip-BLE_Example"; path = Pods_Flip_BLE_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F91B386ECCD710AA145FB170ECE4CF29 /* CBObject+BZAddition.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "CBObject+BZAddition.h"; path = "Flip-BLE/Classes/CBObject+BZAddition.h"; sourceTree = "<group>"; };
 		F99F159E6B5424FCD7DBC01CFC06D09C /* BZBLEError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BZBLEError.m; path = "Flip-BLE/Classes/BZBLEError.m"; sourceTree = "<group>"; };
-		F9C914C6154A4454AD62BA0AE762818F /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		F9C914C6154A4454AD62BA0AE762818F /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		FA12AAB4B1ED9651C6E755D3E4A8AC93 /* BZPeripheralController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BZPeripheralController.h; path = "Flip-BLE/Classes/BZPeripheralController.h"; sourceTree = "<group>"; };
 		FD9B5ABC744057C173E00A158C7B8BE0 /* ConstraintDSL.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintDSL.swift; path = Source/ConstraintDSL.swift; sourceTree = "<group>"; };
 		FE61A1CA7886D7153EA49404E62D422D /* SnapKit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = SnapKit.release.xcconfig; sourceTree = "<group>"; };
@@ -371,7 +369,7 @@
 			isa = PBXGroup;
 			children = (
 				5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase */,
-				4666578494C86883479171E91BE43949 /* Flip-BLE */,
+				4666578494C86883479171E91BE43949 /* Flip_BLE.framework */,
 				F72E01D910A8ECC4AC6B92684DB964AB /* Pods-Flip-BLE_Example */,
 				68E9363ED2188A3179997D056B42AD53 /* Pods-Flip-BLE_Tests */,
 				979486118B3E90C08386079D57962701 /* SnapKit */,
@@ -469,7 +467,6 @@
 		E229B455FADD2537955DD7FD9DB51C4A /* Flip-BLE */ = {
 			isa = PBXGroup;
 			children = (
-				0EB09B3EDCC8945081198A5BD4F65545 /* BZBLECallback.h */,
 				0C02B611F6EAC461D3DD07AB2523C59F /* BZBLEError.h */,
 				F99F159E6B5424FCD7DBC01CFC06D09C /* BZBLEError.m */,
 				CDB6D972D19FCF35C6F1C5F4E3D07CBE /* BZBLEUtils.h */,
@@ -509,7 +506,6 @@
 				35538BBC7D8BD5CFE207560EBB9EA02C /* Support Files */,
 				E41DEAFB41BD0A8F1D8706922C63FC9F /* SwiftSupport */,
 			);
-			name = FBSnapshotTestCase;
 			path = FBSnapshotTestCase;
 			sourceTree = "<group>";
 		};
@@ -554,7 +550,6 @@
 				EF28E3F90F0BD32CED543346577AD7FA /* UILayoutSupport+Extensions.swift */,
 				7DA7A9213EC2AD263DDEF69BB9B0F5C0 /* Support Files */,
 			);
-			name = SnapKit;
 			path = SnapKit;
 			sourceTree = "<group>";
 		};
@@ -584,7 +579,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				62EA4D0DB1AF3BC7A30E627D43CBFAA6 /* BZBLECallback.h in Headers */,
 				3FB0860F2297E0EFBFFB1037C355A674 /* BZBLEError.h in Headers */,
 				55E842D9931AC67C8CEF6BF4634E303E /* BZBLEUtils.h in Headers */,
 				2F9422D2A9424114BD60ECD151EEBA03 /* BZCentralManager.h in Headers */,
@@ -724,7 +718,7 @@
 			);
 			name = "Flip-BLE";
 			productName = Flip_BLE;
-			productReference = 4666578494C86883479171E91BE43949 /* Flip-BLE */;
+			productReference = 4666578494C86883479171E91BE43949 /* Flip_BLE.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -1103,8 +1097,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "${SRCROOT}/../build";
 			};

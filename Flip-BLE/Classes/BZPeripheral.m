@@ -9,6 +9,7 @@
 #import "BZCentralManager.h"
 #import "CBObject+BZAddition.h"
 #import "BZBLEError.h"
+#import "BZPeripheralController.h"
 #import "BZMultiplePeripheralController.h"
 #import "BZPeripheral.h"
 
