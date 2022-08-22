@@ -22,7 +22,7 @@ pod 'Flip-BLE'
 
 ## Author
 
-hanbing0604@aliyun.com, hanbing0604@aliyun.com
+hanbing0604@aliyun.com, Bingerz
 
 ## License
 

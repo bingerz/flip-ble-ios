@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Flip-BLE'
-  s.version          = '0.1.0'
+  s.version          = '0.1.1'
   s.summary          = 'An easy-to-use Bluetooth development framework for the iOS platform.'
 
 # This description is used to generate tags and improve search results.
@@ -24,7 +24,7 @@ TODO: Add long description of the pod here.
   s.homepage         = 'https://github.com/bingerz/flip-ble-ios'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'hanbing0604@aliyun.com' => 'hanbing0604@aliyun.com' }
+  s.author           = { 'hanbing0604@aliyun.com' => 'Bingerz' }
   s.source           = { :git => 'https://github.com/bingerz/flip-ble-ios.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
