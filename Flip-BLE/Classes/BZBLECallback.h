@@ -8,6 +8,11 @@
 #ifndef BZBLECallback_h
 #define BZBLECallback_h
 
+#import <Foundation/Foundation.h>
+#import "BZPeripheral.h"
+
+@class BZPeripheral;
+
 typedef void (^DiscoverCallback)(BZPeripheral *peripheral, NSError *error);
 typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error);
 typedef void (^DiscoverCharactCallback)(CBService *service, NSError *error);
