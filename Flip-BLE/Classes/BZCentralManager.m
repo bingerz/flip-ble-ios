@@ -94,7 +94,7 @@
     }
 }
 
-- (void)destroy {
+- (void)destroyCentral {
     if (_centralManager) {
         __weak __typeof(self)weakSelf = self;
         dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -116,16 +116,28 @@
     }
 }
 
-- (CBManagerState)state {
-    return _centralManager.state;
+- (BOOL)isStateUnknown{
+    return _centralManager.state == CBManagerStateUnknown;
 }
 
-- (BOOL)isPoweredOn {
-    return _centralManager.state == CBManagerStatePoweredOn;
+- (BOOL)isStateResetting{
+    return _centralManager.state == CBManagerStateResetting;
 }
 
-- (BOOL)isPoweredOff {
+- (BOOL)isStateUnsupported{
+    return _centralManager.state == CBManagerStateUnsupported;
+}
+
+- (BOOL)isStateUnauthorized{
+    return _centralManager.state == CBManagerStateUnauthorized;
+}
+
+- (BOOL)isStatePoweredOff{
     return _centralManager.state == CBManagerStatePoweredOff;
+}
+
+- (BOOL)isStatePoweredOn{
+    return _centralManager.state == CBManagerStatePoweredOn;
 }
 
 #pragma mark - Scan peripheral
@@ -155,7 +167,7 @@
 
 #pragma mark - Retrieve peripheral
 
-- (NSArray *)retrievePeripherals:(NSArray *)identifiers {
+- (NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers {
     if (!identifiers || ![identifiers count]) {
         NSLog(@"retrievePeripherals: identifiers is null");
         return nil;
@@ -169,16 +181,28 @@
         }
         index++;
     }
-    return [_centralManager retrievePeripheralsWithIdentifiers:newIDs];
+    NSArray *blePeripherals = [_centralManager retrievePeripheralsWithIdentifiers:newIDs];
+    NSUInteger capacity = blePeripherals ? blePeripherals.count : 0;
+    NSMutableArray *peripherals = [NSMutableArray arrayWithCapacity:capacity];
+    for(CBPeripheral *p in blePeripherals) {
+        [peripherals addObject:[[BZPeripheral alloc] initWithPeripheral:p]];
+    }
+    return peripherals;
 }
 
-- (NSArray *)retrieveConnectedPeripherals:(NSArray *)serviceUUIDs {
+- (NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs {
     if (!serviceUUIDs || ![serviceUUIDs count]) {
         NSLog(@"retrieveConnectedPeripherals: serviceUUIDs is null");
         return nil;
     }
     NSLog(@"retrieveConnectedPeripherals: %lu", (unsigned long)serviceUUIDs.count);
-    return [_centralManager retrieveConnectedPeripheralsWithServices:serviceUUIDs];   
+    NSArray *blePeripherals = [_centralManager retrieveConnectedPeripheralsWithServices:serviceUUIDs];
+    NSUInteger capacity = blePeripherals ? blePeripherals.count : 0;
+    NSMutableArray *peripherals = [NSMutableArray arrayWithCapacity:capacity];
+    for(CBPeripheral *p in blePeripherals) {
+        [peripherals addObject:[[BZPeripheral alloc] initWithPeripheral:p]];
+    }
+    return peripherals;
 }
 
 #pragma mark - Connect peripheral

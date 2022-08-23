@@ -160,6 +160,11 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         super.viewWillAppear(animated)
     }
     
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        destroyCentralManager()
+    }
+    
     func setupTableView() {
         tableView.register(BZDeviceCell.self, forCellReuseIdentifier: cellId)
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
@@ -202,6 +207,11 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         centralManager.startCentral(withRestoreIdKey: restoreIdKey, showPowerAlert: true)
         centralManager.scanDelegate = self
         centralManager.centralStateDelegate = self
+    }
+    
+    func destroyCentralManager() {
+        stopScanDevice()
+        centralManager.destroyCentral()
     }
     
     func insertScannedDevice(_ perpheral: BZPeripheral) {
@@ -251,10 +261,6 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         NSLog("Scan peripheral %@ name %@", peripheral.uuidString(), deviceName);
         insertScannedDevice(peripheral)
         reloadTableView()
-    }
-    
-    func didScanFailed(_ error: Error!) {
-        
     }
     
     func didConnecting() {

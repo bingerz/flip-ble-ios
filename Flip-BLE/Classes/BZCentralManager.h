@@ -39,18 +39,22 @@
 
 - (void)startCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert;
 - (void)restartCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert;
-- (void)destroy;
-- (CBManagerState)state;
-- (BOOL)isPoweredOn;
-- (BOOL)isPoweredOff;
+- (void)destroyCentral;
+
+- (BOOL)isStateUnknown;
+- (BOOL)isStateResetting;
+- (BOOL)isStateUnsupported;
+- (BOOL)isStateUnauthorized;
+- (BOOL)isStatePoweredOff;
+- (BOOL)isStatePoweredOn;
 
 // Scan peripheral
 - (void)startScanWithServices:(NSArray<CBUUID *> *)serviceUUIDs allowDup:(BOOL)allowDup;
 - (void)stopScan;
 
 // Retrieve peripheral
-- (NSArray *)retrievePeripherals:(NSArray *)identifiers;
-- (NSArray *)retrieveConnectedPeripherals:(NSArray *)serviceUUIDs;
+- (NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers;
+- (NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs;
 
 // Connect peripheral
 - (void)connectPeripheral:(BZPeripheral *)peripheral;

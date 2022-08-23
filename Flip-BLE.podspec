@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Flip-BLE'
-  s.version          = '0.1.4'
+  s.version          = '0.2.1'
   s.summary          = 'An easy-to-use Bluetooth development framework for the iOS platform.'
 
 # This description is used to generate tags and improve search results.
@@ -18,7 +18,9 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+  This framework is already in production. After several iterations,
+  it has been relatively stable and reliable. This framework was developed
+  to increase the ease of use and stability of using the iOS Bluetooth API.
                        DESC
 
   s.homepage         = 'https://github.com/bingerz/flip-ble-ios'

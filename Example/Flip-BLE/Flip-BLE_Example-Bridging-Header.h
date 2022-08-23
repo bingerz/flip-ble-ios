@@ -5,5 +5,4 @@
 #import "BZScanDelegate.h"
 #import "BZCentralStateDelegate.h"
 #import "BZConnectStateDelegate.h"
-#import "BZViewController.h"
 #import "BZCentralManager.h"

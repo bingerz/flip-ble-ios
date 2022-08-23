@@ -16,8 +16,6 @@
 
 - (void)didScanning:(BZPeripheral *)peripheral advData:(NSDictionary *)advData;
 
-- (void)didScanFailed:(NSError *)error;
-
 @end
 
 #endif /* BZScanDelegate_h */
