@@ -9,8 +9,9 @@
 import Foundation
 import UIKit
 import SnapKit
+import CoreBluetooth
 
-class BZDeviceCell: UITableViewCell {
+class BZPeripheralCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -22,10 +23,10 @@ class BZDeviceCell: UITableViewCell {
     }
     
     deinit {
-        device = nil
+        peripheral = nil
     }
     
-    var device: BZPeripheral? {
+    var peripheral: BZPeripheral? {
         didSet {
             updateDeviceViewState()
         }
@@ -112,10 +113,10 @@ class BZDeviceCell: UITableViewCell {
     }
     
     fileprivate func updateDeviceViewState() {
-        if let device = device {
-            nameLabel.text = device.name()
-            statusLabel.text = "RSSI: \(device.scannedRSSINumber.intValue)"
-            funcButton.setTitle(device.isConnected() ? "Disconnect" : "Connect", for: .normal)
+        if let peripheral = peripheral {
+            nameLabel.text = peripheral.name()
+            statusLabel.text = "RSSI: \(peripheral.scannedRSSINumber.intValue)"
+            funcButton.setTitle(peripheral.isConnected() ? "Detail" : "Connect", for: .normal)
         }
     }
 }
@@ -131,8 +132,8 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     private let BTN_TAG_RESCAN      = 1;
     private let BTN_TAG_RETRIEVE    = 2;
     
-    fileprivate var scannedDeviceArray = [BZPeripheral]()
-    fileprivate var connectedDeviceArray = [BZPeripheral]()
+    fileprivate var scannedPeripheralArray = [BZPeripheral]()
+    fileprivate var connectedPeripheralArray = [BZPeripheral]()
     
     var centralManager: BZCentralManager = BZCentralManager.default()
     
@@ -162,11 +163,10 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        destroyCentralManager()
     }
     
     func setupTableView() {
-        tableView.register(BZDeviceCell.self, forCellReuseIdentifier: cellId)
+        tableView.register(BZPeripheralCell.self, forCellReuseIdentifier: cellId)
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
         tableView.separatorStyle = .none
     }
@@ -184,7 +184,7 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         switch sender.tag {
         case BTN_TAG_RESCAN:
             stopScanDevice()
-            scannedDeviceArray.removeAll()
+            scannedPeripheralArray.removeAll()
             reloadTableView()
             startScanDevice()
         case BTN_TAG_RETRIEVE:
@@ -215,24 +215,25 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     func insertScannedDevice(_ perpheral: BZPeripheral) {
-        scannedDeviceArray.append(perpheral)
+        scannedPeripheralArray.append(perpheral)
     }
     
     func removeScannedDevice(_ perpheral: BZPeripheral) {
-        scannedDeviceArray.removeAll { $0.uuidString() == perpheral.uuidString() }
+        scannedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
     }
     
     func insertConnectedDevice(_ perpheral: BZPeripheral) {
-        connectedDeviceArray.append(perpheral)
+        connectedPeripheralArray.append(perpheral)
     }
     
     func removeConnectedDevice(_ perpheral: BZPeripheral) {
-        connectedDeviceArray.removeAll { $0.uuidString() == perpheral.uuidString() }
+        connectedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
     }
     
     func startScanDevice() {
         let LLServiceUUID = "1803"
-        let scanServices = [CBUUID(string: LLServiceUUID)]
+        let NTServiceUUID = "0900"
+        let scanServices = [CBUUID(string: LLServiceUUID), CBUUID(string: NTServiceUUID)]
         centralManager.startScan(withServices: scanServices, allowDup: false)
     }
     
@@ -280,9 +281,15 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     func didConnected(_ peripheral: BZPeripheral!) {
-        removeScannedDevice(peripheral)
-        insertConnectedDevice(peripheral)
-        reloadTableView()
+        peripheral.discoverServices { (peripheral, error) in
+            if let peripheral = peripheral {
+                DispatchQueue.main.async {
+                    self.removeScannedDevice(peripheral)
+                    self.insertConnectedDevice(peripheral)
+                    self.reloadTableView()
+                }
+            }
+        }
     }
     
     func didConnectError(_ peripheral: BZPeripheral!, error: Error!) {
@@ -295,15 +302,28 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     @objc func connectButtonClicked(sender: UIButton) {
-        let device = scannedDeviceArray[sender.tag]
-        device.connectStateDelegate = self
-        centralManager.add(device)
-        centralManager.connect(device)
+        let peripheral = scannedPeripheralArray[sender.tag]
+        peripheral.connectStateDelegate = self
+        centralManager.add(peripheral)
+        centralManager.connect(peripheral)
     }
     
     @objc func disconnectButtonClicked(sender: UIButton) {
-        let device = connectedDeviceArray[sender.tag]
-        centralManager.cancel(device)
+        let peripheral = connectedPeripheralArray[sender.tag]
+        centralManager.cancel(peripheral)
+    }
+    
+    @objc func viewButtonClicked(sender: UIButton) {
+        let peripheral = connectedPeripheralArray[sender.tag]
+        self.showServiceList(peripheral)
+    }
+    
+    func showServiceList(_ peripheral: BZPeripheral?) {
+        if let peripheral = peripheral {
+            let vc = BZOperationViewController()
+            vc.peripheral = peripheral
+            navigationController?.pushViewController(vc, animated: true)
+        }
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -311,7 +331,7 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return section == 0 ? connectedDeviceArray.count : scannedDeviceArray.count
+        return section == 0 ? connectedPeripheralArray.count : scannedPeripheralArray.count
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -323,13 +343,13 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellId) as! BZDeviceCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellId) as! BZPeripheralCell
         if indexPath.section == 0 {
-            cell.device = connectedDeviceArray[indexPath.row]
+            cell.peripheral = connectedPeripheralArray[indexPath.row]
             cell.funcButton.tag = indexPath.row;
-            cell.funcButton.addTarget(self, action: #selector(disconnectButtonClicked(sender:)), for: .touchUpInside)
+            cell.funcButton.addTarget(self, action: #selector(viewButtonClicked(sender:)), for: .touchUpInside)
         } else if indexPath.section == 1 {
-            cell.device = scannedDeviceArray[indexPath.row]
+            cell.peripheral = scannedPeripheralArray[indexPath.row]
             cell.funcButton.tag = indexPath.row;
             cell.funcButton.addTarget(self, action: #selector(connectButtonClicked(sender:)), for: .touchUpInside)
         }
@@ -340,9 +360,10 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         tableView.deselectRow(at: indexPath, animated: true)
         if self.tableView == tableView {
             if indexPath.section == 0 {
-                let device = connectedDeviceArray[indexPath.row]
+                let device = connectedPeripheralArray[indexPath.row]
+                
             } else if indexPath.section == 1 {
-                let device = scannedDeviceArray[indexPath.row]
+                let device = scannedPeripheralArray[indexPath.row]
             }
         }
     }

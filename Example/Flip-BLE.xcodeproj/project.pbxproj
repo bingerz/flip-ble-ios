@@ -23,6 +23,8 @@
 		873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 873B8AEA1B1F5CCA007FD442 /* Main.storyboard */; };
 		A4CD155906D1AF34F25D60B6 /* Pods_Flip_BLE_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6B3621A5F830933631AE12 /* Pods_Flip_BLE_Tests.framework */; };
 		C005546228B0BA4800ACA349 /* UIUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C005546128B0BA4800ACA349 /* UIUtils.swift */; };
+		C01C7F1528C32353009C2500 /* BZOperationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C01C7F1428C32353009C2500 /* BZOperationViewController.swift */; };
+		C01C7F1728C36359009C2500 /* BZCharacteristicViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C01C7F1628C36359009C2500 /* BZCharacteristicViewController.swift */; };
 		C0347BB028AF8CB600DD529F /* BZHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0347BAF28AF8CB600DD529F /* BZHomeViewController.swift */; };
 		FD16191717444B1414CDF12A /* Pods_Flip_BLE_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3E4CFF901C2E9EE80FD14F0 /* Pods_Flip_BLE_Example.framework */; };
 /* End PBXBuildFile section */
@@ -65,6 +67,8 @@
 		A3E4CFF901C2E9EE80FD14F0 /* Pods_Flip_BLE_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Flip_BLE_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B159CB0CCC04E6259EC3A319 /* Pods-Flip-BLE_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Flip-BLE_Tests.debug.xcconfig"; path = "Target Support Files/Pods-Flip-BLE_Tests/Pods-Flip-BLE_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		C005546128B0BA4800ACA349 /* UIUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIUtils.swift; sourceTree = "<group>"; };
+		C01C7F1428C32353009C2500 /* BZOperationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BZOperationViewController.swift; sourceTree = "<group>"; };
+		C01C7F1628C36359009C2500 /* BZCharacteristicViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BZCharacteristicViewController.swift; sourceTree = "<group>"; };
 		C0347BAE28AF8CB600DD529F /* Flip-BLE_Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Flip-BLE_Example-Bridging-Header.h"; sourceTree = "<group>"; };
 		C0347BAF28AF8CB600DD529F /* BZHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BZHomeViewController.swift; sourceTree = "<group>"; };
 		C0347BB128AF9D1E00DD529F /* SnapKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SnapKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -140,6 +144,8 @@
 				6003F59C195388D20070C39A /* BZAppDelegate.h */,
 				6003F59D195388D20070C39A /* BZAppDelegate.m */,
 				C0347BAF28AF8CB600DD529F /* BZHomeViewController.swift */,
+				C01C7F1428C32353009C2500 /* BZOperationViewController.swift */,
+				C01C7F1628C36359009C2500 /* BZCharacteristicViewController.swift */,
 				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
 				6003F5A8195388D20070C39A /* Images.xcassets */,
@@ -395,8 +401,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				C005546228B0BA4800ACA349 /* UIUtils.swift in Sources */,
+				C01C7F1728C36359009C2500 /* BZCharacteristicViewController.swift in Sources */,
 				6003F59E195388D20070C39A /* BZAppDelegate.m in Sources */,
 				C0347BB028AF8CB600DD529F /* BZHomeViewController.swift in Sources */,
+				C01C7F1528C32353009C2500 /* BZOperationViewController.swift in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

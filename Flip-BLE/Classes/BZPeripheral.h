@@ -26,6 +26,7 @@ typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error
 typedef void (^DiscoverCharactCallback)(CBService *service, NSError *error);
 typedef void (^RSSICallback)(NSNumber *value, NSError *error);
 typedef void (^NotifyCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 typedef void (^ReadCallback)(CBCharacteristic *charact, NSError * error);
 typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 
@@ -47,6 +48,7 @@ typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 - (NSMutableDictionary *)charactBlocks;
 - (NSMutableArray *)rssiBlocks;
 - (NSMutableDictionary *)notifyBlocks;
+- (NSMutableDictionary *)indicateBlocks;
 - (NSMutableDictionary *)readBlocks;
 - (NSMutableDictionary *)writBlocks;
 
@@ -74,12 +76,6 @@ typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 
 - (BOOL)readRSSI:(RSSICallback)block;
 
-- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
-
-- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
-
-- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback;
-
 - (BOOL)readWithCharact:(CBCharacteristic *)read callback:(ReadCallback)callback;
 
 - (BOOL)readWithUUID:(CBUUID *)service charactUUID:(CBUUID *)read callback:(ReadCallback)callback;
@@ -91,6 +87,18 @@ typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 - (BOOL)writeWithUUID:(CBUUID *)service charactUUID:(CBUUID *)write value:(NSData *)value callback:(WriteCallback)callback;
 
 - (BOOL)writeWithUUIDString:(NSString *)service charactUUID:(NSString *)write value:(NSData *)value callback:(WriteCallback)callback;
+
+- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
+
+- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
+
+- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback;
+
+- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback;
+
+- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(IndicateCallback)callback;
+
+- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(IndicateCallback)callback;
 
 @end
 

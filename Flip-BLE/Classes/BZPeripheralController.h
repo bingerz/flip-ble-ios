@@ -20,15 +20,19 @@
 
 - (id)withUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID;
 
-- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error;
-
 - (void)handleReadCallback:(CBCharacteristic *)charact error:(NSError *)error;
 
-- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback;
+- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error;
+
+- (void)handleIndicateCallback:(CBCharacteristic *)charact error:(NSError *)error;
 
 - (BOOL)readCharact:(ReadCallback)callback;
 
 - (BOOL)writeCharact:(NSData *)value callback:(WriteCallback)callback;
+
+- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback;
+
+- (BOOL)indicateCharact:(BOOL)enable callback:(IndicateCallback)callback;
 
 @end
 

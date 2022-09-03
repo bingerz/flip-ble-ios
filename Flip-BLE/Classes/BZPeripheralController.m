@@ -20,7 +20,7 @@
 
 @implementation BZPeripheralController
 
-- (id)initWithPeripheral:(BZPeripheral *)peripheral {
+- (id)initWithPeripheral:(BZPeripheral *)peripheral{
     self = [super init];
     if (self) {
         _peripheral = peripheral;
@@ -29,7 +29,7 @@
     return self;
 }
 
-- (id)withCharact:(CBCharacteristic *)characteristic {
+- (id)withCharact:(CBCharacteristic *)characteristic{
     if (_blePeripheral && characteristic) {
         _service = characteristic.service;
         _characteristic = characteristic;
@@ -38,7 +38,7 @@
     return nil;
 }
 
-- (id)withUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID {
+- (id)withUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID{
     if (_blePeripheral && serviceUUID != nil) {
         NSArray *services = [_blePeripheral services];
         for (CBService *s in services) {
@@ -63,7 +63,7 @@
     return nil;
 }
 
-- (void)addNotifyCallback:(NotifyCallback)callback {
+- (void)addNotifyCallback:(NotifyCallback)callback{
     NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
     NSMutableDictionary *characteristics = notifyBlocks[_service.UUID];
     if (!characteristics) {
@@ -78,7 +78,7 @@
     [callbacks addObject:[callback copy]];
 }
 
-- (void)removeNotifyCallback {
+- (void)removeNotifyCallback{
     NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
     NSMutableDictionary *characteristics = notifyBlocks[_service.UUID];
     if (!characteristics) {
@@ -91,7 +91,7 @@
     }
 }
 
-- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error {
+- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error{
     NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
     NSDictionary *characteristics = notifyBlocks[charact.service.UUID];
     if (characteristics) {
@@ -104,7 +104,48 @@
     }
 }
 
-- (void)addReadCallback:(ReadCallback)callback {
+- (void)addIndicateCallback:(IndicateCallback)callback{
+    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
+    NSMutableDictionary *characteristics = indicateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (!callbacks) {
+        callbacks = [NSMutableArray arrayWithCapacity:1];
+        characteristics[_characteristic.UUID] = callbacks;
+    }
+    [callbacks addObject:[callback copy]];
+}
+
+- (void)removeIndicateCallback{
+    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
+    NSMutableDictionary *characteristics = indicateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (callbacks) {
+        [callbacks removeAllObjects];
+    }
+}
+
+- (void)handleIndicateCallback:(CBCharacteristic *)charact error:(NSError *)error{
+    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
+    NSDictionary *characteristics = indicateBlocks[charact.service.UUID];
+    if (characteristics) {
+        NSMutableArray *array = characteristics[charact.UUID];
+        if (array.count > 0) {
+            for (IndicateCallback callback in array) {
+                callback(charact, error);
+            }
+        }
+    }
+}
+
+- (void)addReadCallback:(ReadCallback)callback{
     NSMutableDictionary *readBlocks = [_peripheral readBlocks];
     NSMutableDictionary *characteristics = readBlocks[_service.UUID];
     if (!characteristics) {
@@ -119,7 +160,7 @@
     [callbacks addObject:[callback copy]];
 }
 
-- (void)handleReadCallback:(CBCharacteristic *)charact error:(NSError *)error {
+- (void)handleReadCallback:(CBCharacteristic *)charact error:(NSError *)error{
     NSMutableDictionary *readBlocks = [_peripheral readBlocks];
     NSDictionary *characteristics = readBlocks[charact.service.UUID];
     if (characteristics) {
@@ -133,9 +174,76 @@
     }
 }
 
-- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback {
+- (BOOL)readCharact:(ReadCallback)callback{
     if (!callback) {
-        NSLog(@"Notify characteristic failure, callback is null");
+        NSLog(@"Read failure, callback is null");
+        return NO;
+    }
+    
+    if (_blePeripheral && _characteristic) {
+        if (_characteristic.properties & CBCharacteristicPropertyRead) {
+            [self addReadCallback:callback];
+            [_blePeripheral readValueForCharacteristic:_characteristic];
+            return YES;
+        } else {
+            if (callback) {
+                NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          @"Read characteristic fail", NSLocalizedDescriptionKey,
+                                          @"Reason:Characteristic not support read", NSLocalizedFailureReasonErrorKey, nil];
+                NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
+                callback(_characteristic, error);
+            }
+        }
+    } else {
+        if (callback) {
+            NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      @"Read characteristic fail", NSLocalizedDescriptionKey,
+                                      @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
+            NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
+            callback(_characteristic, error);
+        }
+    }
+    return NO;
+}
+
+- (BOOL)writeCharact:(NSData *)value callback:(WriteCallback)callback{
+    if (!callback) {
+        NSLog(@"Write failure, callback is null");
+        return NO;
+    }
+    if (_blePeripheral && _characteristic) {
+        if (_characteristic.properties & CBCharacteristicPropertyWrite ||
+            _characteristic.properties & CBCharacteristicPropertyWriteWithoutResponse) {
+            CBCharacteristicWriteType writeType = _characteristic.properties & CBCharacteristicPropertyWrite ? CBCharacteristicWriteWithResponse : CBCharacteristicWriteWithoutResponse;
+            [_blePeripheral writeValue:value forCharacteristic:_characteristic type:writeType];
+            if (callback) {
+                callback(_characteristic, nil);
+            }
+            return YES;
+        } else {
+            if (callback) {
+                NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          @"Write characteristic fail", NSLocalizedDescriptionKey,
+                                          @"Reason:Characteristic not support write", NSLocalizedFailureReasonErrorKey, nil];
+                NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
+                callback(_characteristic, error);
+            }
+        }
+    } else {
+        if (callback) {
+            NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      @"Write characteristic fail", NSLocalizedDescriptionKey,
+                                      @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
+            NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
+            callback(_characteristic, error);
+        }
+    }
+    return NO;
+}
+
+- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback{
+    if (!callback) {
+        NSLog(@"Notify failure, callback is null");
         return NO;
     }
     
@@ -171,22 +279,28 @@
     return NO;
 }
 
-- (BOOL)readCharact:(ReadCallback)callback {
+- (BOOL)indicateCharact:(BOOL)enable callback:(IndicateCallback)callback{
     if (!callback) {
-        NSLog(@"Read characteristic failure, callback is null");
+        NSLog(@"Indicate failure, callback is null");
         return NO;
     }
     
     if (_blePeripheral && _characteristic) {
-        if (_characteristic.properties & CBCharacteristicPropertyRead) {
-            [self addReadCallback:callback];
-            [_blePeripheral readValueForCharacteristic:_characteristic];
+        if (_characteristic.properties & CBCharacteristicPropertyIndicate) {
+            if (enable) {
+                [self addIndicateCallback:callback];
+            } else {
+                [self removeIndicateCallback];
+            }
+            if (enable ^ _characteristic.isNotifying) {
+                [_blePeripheral setNotifyValue:enable forCharacteristic:_characteristic];
+            }
             return YES;
         } else {
             if (callback) {
                 NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                          @"Read characteristic fail", NSLocalizedDescriptionKey,
-                                          @"Reason:Characteristic not support read", NSLocalizedFailureReasonErrorKey, nil];
+                                          @"Indicate characteristic fail", NSLocalizedDescriptionKey,
+                                          @"Reason:Characteristic not support indicate", NSLocalizedFailureReasonErrorKey, nil];
                 NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
                 callback(_characteristic, error);
             }
@@ -194,41 +308,7 @@
     } else {
         if (callback) {
             NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      @"Read characteristic fail", NSLocalizedDescriptionKey,
-                                      @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
-            NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-            callback(_characteristic, error);
-        }
-    }
-    return NO;
-}
-
-- (BOOL)writeCharact:(NSData *)value callback:(WriteCallback)callback {
-    if (!callback) {
-        NSLog(@"Write characteristic warning, callback is null");
-    }
-    if (_blePeripheral && _characteristic) {
-        if (_characteristic.properties & CBCharacteristicPropertyWrite ||
-            _characteristic.properties & CBCharacteristicPropertyWriteWithoutResponse) {
-            CBCharacteristicWriteType writeType = _characteristic.properties & CBCharacteristicPropertyWrite ? CBCharacteristicWriteWithResponse : CBCharacteristicWriteWithoutResponse;
-            [_blePeripheral writeValue:value forCharacteristic:_characteristic type:writeType];
-            if (callback) {
-                callback(_characteristic, nil);
-            }
-            return YES;
-        } else {
-            if (callback) {
-                NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                          @"Write characteristic fail", NSLocalizedDescriptionKey,
-                                          @"Reason:Characteristic not support write", NSLocalizedFailureReasonErrorKey, nil];
-                NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-                callback(_characteristic, error);
-            }
-        }
-    } else {
-        if (callback) {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      @"Write characteristic fail", NSLocalizedDescriptionKey,
+                                      @"Indicate characteristic fail", NSLocalizedDescriptionKey,
                                       @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
             NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
             callback(_characteristic, error);

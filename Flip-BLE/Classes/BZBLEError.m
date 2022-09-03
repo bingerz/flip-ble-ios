@@ -12,7 +12,7 @@ static NSDictionary *errorDictionary = nil;
 
 @implementation NTBLEError
 
-+ (void)initialize {
++ (void)initialize{
     if (self == [NTBLEError class]) {
         errorDictionary = \
         @{
@@ -25,13 +25,13 @@ static NSDictionary *errorDictionary = nil;
     }
 }
 
-+ (NSError *)errorCode:(BZBLEErrorCode)code userInfo:(NSDictionary *)dic {
++ (NSError *)errorCode:(BZBLEErrorCode)code userInfo:(NSDictionary *)dic{
     return [NSError errorWithDomain:errorDictionary[@(code)]
                                code:code
                            userInfo:dic];
 }
 
-+ (NSString *)transformCodeToStringInfo:(BZBLEErrorCode)code {
++ (NSString *)transformCodeToStringInfo:(BZBLEErrorCode)code{
     return errorDictionary[@(code)];
 }
 

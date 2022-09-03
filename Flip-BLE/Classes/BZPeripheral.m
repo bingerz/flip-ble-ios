@@ -28,6 +28,7 @@
     NSMutableDictionary *_charactCallbacks;
     NSMutableArray      *_rssiCallbacks;
     NSMutableDictionary *_notifyCallbacks;
+    NSMutableDictionary *_indicateCallbacks;
     NSMutableDictionary *_readCallbacks;
     NSMutableDictionary *_writeCallbacks;
 }
@@ -42,7 +43,7 @@
     return self;
 }
 
-- (void)dealloc {
+- (void)dealloc{
     //[discoverLock unlock];
     //discoverLock = nil;
     [self cleanCallbacks];
@@ -55,11 +56,11 @@
 
 #pragma mark - Peripheral property
 
-- (CBPeripheral *)blePeripheral {
+- (CBPeripheral *)blePeripheral{
     return _blePeripheral;
 }
 
-- (NSString *)bleState {
+- (NSString *)bleState{
     NSString *stateStr = @"UNKnown";
     if (_blePeripheral) {
         switch (_blePeripheral.state) {
@@ -82,40 +83,40 @@
     return stateStr;
 }
 
-- (NSString *)name {
+- (NSString *)name{
     if (_blePeripheral) {
         return _blePeripheral.name;
     }
     return nil;
 }
 
-- (NSString *)UUIDString {
+- (NSString *)UUIDString{
     if (_blePeripheral && _blePeripheral.identifier) {
         return [_blePeripheral.identifier UUIDString];
     }
     return nil;
 }
 
-- (NSArray<CBService *> *)services {
+- (NSArray<CBService *> *)services{
     return _blePeripheral ? _blePeripheral.services : nil;
 }
 
-- (BOOL)isConnecting {
+- (BOOL)isConnecting{
     return _blePeripheral && _blePeripheral.state == CBPeripheralStateConnecting;
 }
 
-- (BOOL)isConnected {
+- (BOOL)isConnected{
     return _blePeripheral && _blePeripheral.state == CBPeripheralStateConnected;
 }
 
-- (void)updateBLEPeripheral:(CBPeripheral *)blePeripheral {
+- (void)updateBLEPeripheral:(CBPeripheral *)blePeripheral{
     if (blePeripheral) {
         _blePeripheral = blePeripheral;
         _blePeripheral.delegate = self;
     }
 }
 
-- (void)updateStateWithBLEPeripheral:(CBPeripheral *)blePeripheral {
+- (void)updateStateWithBLEPeripheral:(CBPeripheral *)blePeripheral{
     if (blePeripheral) {
         switch (blePeripheral.state) {
             case CBPeripheralStateDisconnected:
@@ -142,55 +143,62 @@
 
 #pragma mark - Peripheral utils
 
-- (CBUUID *)formUUID:(NSString *)uuidString {
+- (CBUUID *)formUUID:(NSString *)uuidString{
     return [CBUUID UUIDWithString:uuidString];
 }
 
 #pragma mark - Peripheral block
 
-- (NSMutableArray *)discoverBlocks {
+- (NSMutableArray *)discoverBlocks{
     if (!_discoverCallbacks) {
         _discoverCallbacks = [NSMutableArray arrayWithCapacity:1];
     }
     return _discoverCallbacks;
 }
 
-- (NSMutableArray *)serviceBlocks {
+- (NSMutableArray *)serviceBlocks{
     if (!_serviceCallbacks) {
         _serviceCallbacks = [NSMutableArray arrayWithCapacity:1];
     }
     return _serviceCallbacks;
 }
 
-- (NSMutableDictionary *)charactBlocks {
+- (NSMutableDictionary *)charactBlocks{
     if (!_charactCallbacks) {
         _charactCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
     }
     return _charactCallbacks;
 }
 
-- (NSMutableArray *)rssiBlocks {
+- (NSMutableArray *)rssiBlocks{
     if (!_rssiCallbacks) {
         _rssiCallbacks = [NSMutableArray arrayWithCapacity:1];
     }
     return _rssiCallbacks;
 }
 
-- (NSMutableDictionary *)notifyBlocks {
+- (NSMutableDictionary *)notifyBlocks{
     if (!_notifyCallbacks) {
         _notifyCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
     }
     return _notifyCallbacks;
 }
 
-- (NSMutableDictionary *)readBlocks {
+- (NSMutableDictionary *)indicateBlocks{
+    if (!_indicateCallbacks) {
+        _indicateCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    return _indicateCallbacks;
+}
+
+- (NSMutableDictionary *)readBlocks{
     if (!_readCallbacks) {
         _readCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
     }
     return _readCallbacks;
 }
 
-- (NSMutableDictionary *)writBlocks {
+- (NSMutableDictionary *)writBlocks{
     if (!_writeCallbacks) {
         _writeCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
     }
@@ -203,18 +211,19 @@
     _charactCallbacks = nil;
     _rssiCallbacks  = nil;
     _notifyCallbacks = nil;
+    _indicateCallbacks = nil;
     _readCallbacks  = nil;
     _writeCallbacks = nil;
 }
 
-- (void)addDiscoverCallback:(DiscoverCallback)block {
+- (void)addDiscoverCallback:(DiscoverCallback)block{
     NSMutableArray *callbacks = [self discoverBlocks];
     if (callbacks) {
         [callbacks addObject:[block copy]];
     }
 }
 
-- (void)handleDiscoverCallback:(BZPeripheral *)peripheral error:(NSError *)error {
+- (void)handleDiscoverCallback:(BZPeripheral *)peripheral error:(NSError *)error{
     NSMutableArray *callbacks = [self discoverBlocks];
     if (callbacks && callbacks.count > 0) {
         for(DiscoverCallback callback in [callbacks copy]) {
@@ -224,14 +233,14 @@
     }
 }
 
-- (void)addDiscoverServiceCallback:(DiscoverServiceCallback)block {
+- (void)addDiscoverServiceCallback:(DiscoverServiceCallback)block{
     NSMutableArray *callbacks = [self serviceBlocks];
     if (callbacks) {
         [callbacks addObject:[block copy]];
     }
 }
 
-- (void)handleDiscoverServiceCallback:(BZPeripheral *)peripheral error:(NSError *)error {
+- (void)handleDiscoverServiceCallback:(BZPeripheral *)peripheral error:(NSError *)error{
     NSMutableArray *callbacks = [self serviceBlocks];
     if (callbacks && callbacks.count > 0) {
         for(DiscoverServiceCallback callback in [callbacks copy]) {
@@ -241,7 +250,7 @@
     }
 }
 
-- (void)addDiscoverCharactCallback:(CBUUID *)serviceUUID callback:(DiscoverCharactCallback)block {
+- (void)addDiscoverCharactCallback:(CBUUID *)serviceUUID callback:(DiscoverCharactCallback)block{
     NSMutableDictionary *charactBlocks = [self charactBlocks];
     NSMutableArray *callbacks = charactBlocks[serviceUUID];
     if (!callbacks) {
@@ -251,7 +260,7 @@
     [callbacks addObject:[block copy]];
 }
 
-- (void)handleDiscoverCharactCallback:(CBService *)service error:(NSError *)error {
+- (void)handleDiscoverCharactCallback:(CBService *)service error:(NSError *)error{
     NSMutableDictionary *charactBlocks = [self charactBlocks];
     NSMutableArray *callbacks = charactBlocks[service.UUID];
     if (callbacks) {
@@ -262,14 +271,14 @@
     }
 }
 
-- (void)addRSSICallback:(RSSICallback)block {
+- (void)addRSSICallback:(RSSICallback)block{
     NSMutableArray *callbacks = [self rssiBlocks];
     if (callbacks) {
         [callbacks addObject:[block copy]];
     }
 }
 
-- (void)handleRSSICallback:(NSNumber *)value error:(NSError *)error {
+- (void)handleRSSICallback:(NSNumber *)value error:(NSError *)error{
     NSMutableArray *callbacks = [self rssiBlocks];
     if (callbacks && callbacks.count > 0) {
         for(RSSICallback callback in [callbacks copy]) {
@@ -281,7 +290,7 @@
 
 #pragma mark - Peripheral function
 
-- (BOOL)connect {
+- (BOOL)connect{
     if (!_blePeripheral) {
         NSLog(@"BZPeripheral connect fail, peripheral is null.");
         return NO;
@@ -301,7 +310,7 @@
     return YES;
 }
 
-- (void)discoverServicesOnMainThread:(nullable NSArray<CBUUID *> *)serviceUUIDs {
+- (void)discoverServicesOnMainThread:(nullable NSArray<CBUUID *> *)serviceUUIDs{
     if (_blePeripheral) {
         [BZCentralManager runOnMainThread:^{
             [self->_blePeripheral discoverServices:serviceUUIDs];
@@ -309,7 +318,7 @@
     }
 }
 
-- (void)discoverCharacteristicsOnMainThread:(nullable NSArray<CBUUID *> *)charactUUIDs forService:(CBService *)service {
+- (void)discoverCharacteristicsOnMainThread:(nullable NSArray<CBUUID *> *)charactUUIDs forService:(CBService *)service{
     if (_blePeripheral) {
         [BZCentralManager runOnMainThread:^{
             [self->_blePeripheral discoverCharacteristics:charactUUIDs forService:service];
@@ -317,7 +326,7 @@
     }
 }
 
-- (BOOL)discoverServices:(DiscoverCallback)callback {
+- (BOOL)discoverServices:(DiscoverCallback)callback{
     if ([self isConnected]) {
         //[discoverLock lock];
         if (_state != BZPeripheralStateDiscovering) {
@@ -343,7 +352,7 @@
     }
 }
 
-- (BOOL)discoverService:(NSArray *)serviceUUIDs callback:(DiscoverServiceCallback)callback {
+- (BOOL)discoverService:(NSArray *)serviceUUIDs callback:(DiscoverServiceCallback)callback{
     if ([self isConnected]) {
         //[discoverLock lock];
         if (_state != BZPeripheralStateDiscovering) {
@@ -368,7 +377,7 @@
     }
 }
 
-- (BOOL)discoverCharact:(NSArray *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback {
+- (BOOL)discoverCharact:(NSArray *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback{
     if ([self isConnected]) {
         [self addDiscoverCharactCallback:service.UUID callback:callback];
         [self discoverCharacteristicsOnMainThread:charactUUIDs forService:service];
@@ -383,14 +392,14 @@
     }
 }
 
-- (BOOL)isContainCharactWithUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID {
+- (BOOL)isContainCharactWithUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID{
     if (!_blePeripheral) {
         NSLog(@"BZPeripheral check contain charact fail, peripheral is null.");
         return NO;
     }
     NSArray *services = _blePeripheral.services;
     for (NSUInteger i = 0; i < services.count; i ++) {
-        CBService * service = services[i];
+        CBService *service = services[i];
         if ([serviceUUID isEqual:service.UUID]) {
             for (NSUInteger j = 0; j < service.characteristics.count; j++) {
                 CBCharacteristic *charact = service.characteristics[j];
@@ -403,7 +412,7 @@
     return NO;
 }
 
-- (BOOL)isContainCharactWithString:(NSString *)serviceUUIDString charact:(NSString *)charactUUIDString {
+- (BOOL)isContainCharactWithString:(NSString *)serviceUUIDString charact:(NSString *)charactUUIDString{
     CBUUID *serviceUUID = [self formUUID:serviceUUIDString];
     CBUUID *charactUUID = [self formUUID:charactUUIDString];
     return [self isContainCharactWithUUID:serviceUUID charact:charactUUID];
@@ -423,7 +432,7 @@
     return YES;
 }
 
-- (BOOL)readRSSI:(RSSICallback)callback {
+- (BOOL)readRSSI:(RSSICallback)callback{
     if ([self isConnected]) {
         [self addRSSICallback:callback];
         [_blePeripheral readRSSI];
@@ -438,35 +447,7 @@
     }
 }
 
-- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback {
-    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
-    if (controller) {
-        controller = [controller withCharact:notify];
-        if (controller) {
-            return [controller notifyCharact:enable callback:callback];
-        }
-    }
-    return NO;
-}
-
-- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback {
-    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
-    if (controller) {
-        controller = [controller withUUID:service charact:notify];
-        if (controller) {
-            return [controller notifyCharact:enable callback:callback];
-        }
-    }
-    return NO;
-}
-
-- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback {
-    CBUUID *serviceUUID = [self formUUID:service];
-    CBUUID *charactUUID = [self formUUID:notify];
-    return [self setNotifyWithUUID:serviceUUID charactUUID:charactUUID enable:enable callback:callback];
-}
-
-- (BOOL)readWithCharact:(CBCharacteristic *)read callback:(ReadCallback)callback {
+- (BOOL)readWithCharact:(CBCharacteristic *)read callback:(ReadCallback)callback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withCharact:read];
@@ -477,7 +458,7 @@
     return NO;
 }
 
-- (BOOL)readWithUUID:(CBUUID *)service charactUUID:(CBUUID *)read callback:(ReadCallback)callback {
+- (BOOL)readWithUUID:(CBUUID *)service charactUUID:(CBUUID *)read callback:(ReadCallback)callback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withUUID:service charact:read];
@@ -488,13 +469,13 @@
     return NO;
 }
 
-- (BOOL)readWithUUIDString:(NSString *)service charactUUID:(NSString *)read callback:(ReadCallback)callback {
+- (BOOL)readWithUUIDString:(NSString *)service charactUUID:(NSString *)read callback:(ReadCallback)callback{
     CBUUID *serviceUUID = [self formUUID:service];
     CBUUID *charactUUID = [self formUUID:read];
     return [self readWithUUID:serviceUUID charactUUID:charactUUID callback:callback];
 }
 
-- (BOOL)writeWithCharact:(CBCharacteristic *)write  value:(NSData *)value callback:(ReadCallback)callback {
+- (BOOL)writeWithCharact:(CBCharacteristic *)write  value:(NSData *)value callback:(ReadCallback)callback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withCharact:write];
@@ -505,7 +486,7 @@
     return NO;
 }
 
-- (BOOL)writeWithUUID:(CBUUID *)service charactUUID:(CBUUID *)write value:(NSData *)value callback:(WriteCallback)callback {
+- (BOOL)writeWithUUID:(CBUUID *)service charactUUID:(CBUUID *)write value:(NSData *)value callback:(WriteCallback)callback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withUUID:service charact:write];
@@ -516,15 +497,71 @@
     return NO;
 }
 
-- (BOOL)writeWithUUIDString:(NSString *)service charactUUID:(NSString *)write value:(NSData *)value callback:(WriteCallback)callback {
+- (BOOL)writeWithUUIDString:(NSString *)service charactUUID:(NSString *)write value:(NSData *)value callback:(WriteCallback)callback{
     CBUUID *serviceUUID = [self formUUID:service];
     CBUUID *charactUUID = [self formUUID:write];
     return [self writeWithUUID:serviceUUID charactUUID:charactUUID value:value callback:callback];
 }
 
+- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback{
+    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
+    if (controller) {
+        controller = [controller withCharact:notify];
+        if (controller) {
+            return [controller notifyCharact:enable callback:callback];
+        }
+    }
+    return NO;
+}
+
+- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback{
+    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
+    if (controller) {
+        controller = [controller withUUID:service charact:notify];
+        if (controller) {
+            return [controller notifyCharact:enable callback:callback];
+        }
+    }
+    return NO;
+}
+
+- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback{
+    CBUUID *serviceUUID = [self formUUID:service];
+    CBUUID *charactUUID = [self formUUID:notify];
+    return [self setNotifyWithUUID:serviceUUID charactUUID:charactUUID enable:enable callback:callback];
+}
+
+- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback{
+    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
+    if (controller) {
+        controller = [controller withCharact:indicate];
+        if (controller) {
+            return [controller indicateCharact:enable callback:callback];
+        }
+    }
+    return NO;
+}
+
+- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback{
+    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
+    if (controller) {
+        controller = [controller withUUID:service charact:indicate];
+        if (controller) {
+            return [controller indicateCharact:enable callback:callback];
+        }
+    }
+    return NO;
+}
+
+- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)indicate enable:(BOOL)enable  callback:(IndicateCallback)callback{
+    CBUUID *serviceUUID = [self formUUID:service];
+    CBUUID *charactUUID = [self formUUID:indicate];
+    return [self setIndicateWithUUID:serviceUUID charactUUID:charactUUID enable:enable callback:callback];
+}
+
 #pragma mark - Peripheral delgate
 
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error{
     [self updateBLEPeripheral:peripheral];
     if (_isDiscoverServiceAll) {
         _discoverServiceCount = peripheral.services.count;
@@ -538,7 +575,7 @@
     }
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error{
     [self updateBLEPeripheral:peripheral];
     if (_isDiscoverServiceAll) {
         _discoverServiceCount--;
@@ -551,18 +588,18 @@
     }
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     for (CBDescriptor *desc in characteristic.descriptors) {
         NSLog(@"didDicoverDescriptor charact:%@, desc:%@",characteristic.UUIDString, desc.UUIDString);
     }
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     NSString *state = characteristic.isNotifying ? @"On" : @"Off";
-    NSLog(@"didUpdateNotification:%@, state:%@", characteristic.UUIDString, state);
+    NSLog(@"didUpdateNotifyOrIndicate:%@, state:%@", characteristic.UUIDString, state);
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     NSLog(@"didUpdateValueForCharact:%@, error:%@", characteristic.UUIDString, error);
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
@@ -572,27 +609,28 @@
         if (controller) {
             [controller handleReadCallback:characteristic error:error];
             [controller handleNotifyCallback:characteristic error:error];
+            [controller handleIndicateCallback:characteristic error:error];
         }
     }
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error{
     NSLog(@"didUpdateValueForDesc:%@, error:%@", descriptor.UUIDString, error);
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     NSLog(@"didWriteValueForCharact:%@(%@), error:%@", characteristic.UUIDString, characteristic.value, error);
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error{
     NSLog(@"didWriteValueForDesc:%@, error:%@", descriptor.UUIDString, error);
 }
 
-- (void)peripheralDidUpdateName:(CBPeripheral *)peripheral {
+- (void)peripheralDidUpdateName:(CBPeripheral *)peripheral{
     NSLog(@"DidUpdateName:%@", peripheral.name);
 }
 
-- (void)peripheral:(CBPeripheral *)peripheral didReadRSSI:(NSNumber *)RSSI error:(NSError *)error {
+- (void)peripheral:(CBPeripheral *)peripheral didReadRSSI:(NSNumber *)RSSI error:(NSError *)error{
     [self handleRSSICallback:RSSI error:error];
 }
 

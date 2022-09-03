@@ -10,14 +10,14 @@
 #import "CBObject+BZAddition.h"
 #import "BZMultiplePeripheralController.h"
 
-@implementation BZMultiplePeripheralController {
+@implementation BZMultiplePeripheralController{
     NSLock *dicLock;
     NSMutableDictionary *peripherals;
 }
 
 static BZMultiplePeripheralController *sharedInstance;
 
-+ (instancetype)sharedInstance {
++ (instancetype)sharedInstance{
     static dispatch_once_t onceToken;
     
     dispatch_once(&onceToken, ^{
@@ -27,7 +27,7 @@ static BZMultiplePeripheralController *sharedInstance;
     return sharedInstance;
 }
 
-- (instancetype)init {
+- (instancetype)init{
     self = [super init];
     if (self) {
         dicLock = [[NSLock alloc] init];
@@ -36,14 +36,14 @@ static BZMultiplePeripheralController *sharedInstance;
     return self;
 }
 
-- (void)dealloc {
+- (void)dealloc{
     [dicLock unlock];
     dicLock = nil;
     [peripherals removeAllObjects];
     peripherals = nil;
 }
 
-- (void)addPeripheral:(BZPeripheral *)peripheral {
+- (void)addPeripheral:(BZPeripheral *)peripheral{
     if (!peripheral) {
         return;
     }
@@ -56,7 +56,7 @@ static BZMultiplePeripheralController *sharedInstance;
     [dicLock unlock];
 }
 
-- (void)removePeripheral:(BZPeripheral *)peripheral {
+- (void)removePeripheral:(BZPeripheral *)peripheral{
     if (!peripheral || ![peripherals BZ_isValidForKey:peripheral.UUIDString]) {
         NSLog(@"removePeripheral peripheral %@", peripheral ? @"not exist" : @"is nil");
         return;
@@ -66,20 +66,20 @@ static BZMultiplePeripheralController *sharedInstance;
     [dicLock unlock];
 }
 
-- (void)removeAllPeripheral {
+- (void)removeAllPeripheral{
     [dicLock lock];
     [peripherals removeAllObjects];
     [dicLock unlock];
 }
 
-- (BZPeripheral *)getPeripheral:(NSString *)key {
+- (BZPeripheral *)getPeripheral:(NSString *)key{
     if ([peripherals BZ_isValidForKey:key]) {
         return peripherals[key];
     }
     return nil;
 }
 
-- (void)disconnectAllPeripheral {
+- (void)disconnectAllPeripheral{
     [dicLock lock];
     for(NSString *key in peripherals) {
         BZPeripheral *peripheral = peripherals[key];
@@ -88,7 +88,7 @@ static BZMultiplePeripheralController *sharedInstance;
     [dicLock unlock];
 }
 
-- (NSArray *)getPeripherals {
+- (NSArray *)getPeripherals{
     return [peripherals allValues];
 }
 

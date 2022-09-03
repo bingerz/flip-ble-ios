@@ -22,7 +22,7 @@
 
 @implementation BZCentralManager
 
-+ (BZCentralManager *)defaultManager {
++ (BZCentralManager *)defaultManager{
     static BZCentralManager *defaultManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -41,7 +41,7 @@
     }
 }
 
-- (id)init {
+- (id)init{
     self = [super init];
     if (self) {
         // init property
@@ -49,11 +49,11 @@
     return self;
 }
 
-- (CBCentralManager *)centralManager {
+- (CBCentralManager *)centralManager{
     return _centralManager;
 }
 
-- (void)startCentralWithOptions:(NSDictionary<NSString *, id> *)options {
+- (void)startCentralWithOptions:(NSDictionary<NSString *, id> *)options{
     if (!_centralManager) {
         dispatch_queue_global_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         _centralManager = [[CBCentralManager alloc] initWithDelegate:self
@@ -64,7 +64,7 @@
     }
 }
 
-- (void)startCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert {
+- (void)startCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert{
     NSMutableDictionary *options = [NSMutableDictionary dictionaryWithCapacity:2];
     if (key) {
         [options setObject:key forKey:CBCentralManagerOptionRestoreIdentifierKey];
@@ -73,7 +73,7 @@
     [self startCentralWithOptions:options];
 }
 
-- (void)restartCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert {
+- (void)restartCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert{
     if (_centralManager) {
         __weak __typeof(self)weakSelf = self;
         dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -94,7 +94,7 @@
     }
 }
 
-- (void)destroyCentral {
+- (void)destroyCentral{
     if (_centralManager) {
         __weak __typeof(self)weakSelf = self;
         dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -142,7 +142,7 @@
 
 #pragma mark - Scan peripheral
 
-- (void)scanWithServices:(NSArray<CBUUID *> *)serviceUUIDs options:(NSDictionary<NSString *, id> *)options {
+- (void)scanWithServices:(NSArray<CBUUID *> *)serviceUUIDs options:(NSDictionary<NSString *, id> *)options{
     NSLog(@"scanWithServices %@ options %@", serviceUUIDs ? serviceUUIDs : @"nil", options ? options : @"nil");
     [BZCentralManager runOnMainThread:^{
         [self->_centralManager scanForPeripheralsWithServices:serviceUUIDs options:options];
@@ -150,13 +150,13 @@
     }];
 }
 
-- (void)startScanWithServices:(NSArray<CBUUID *> *)serviceUUIDs allowDup:(BOOL)allowDup {
+- (void)startScanWithServices:(NSArray<CBUUID *> *)serviceUUIDs allowDup:(BOOL)allowDup{
     NSMutableDictionary *options = [NSMutableDictionary dictionaryWithCapacity:1];
     [options BZ_setObject:@(allowDup) forKey:CBCentralManagerScanOptionAllowDuplicatesKey];
     [self scanWithServices:serviceUUIDs options:options];
 }
 
-- (void)stopScan {
+- (void)stopScan{
     [BZCentralManager runOnMainThread:^{
         if (self.scanning) {
             [self->_centralManager stopScan];
@@ -167,7 +167,7 @@
 
 #pragma mark - Retrieve peripheral
 
-- (NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers {
+- (NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers{
     if (!identifiers || ![identifiers count]) {
         NSLog(@"retrievePeripherals: identifiers is null");
         return nil;
@@ -190,7 +190,7 @@
     return peripherals;
 }
 
-- (NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs {
+- (NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs{
     if (!serviceUUIDs || ![serviceUUIDs count]) {
         NSLog(@"retrieveConnectedPeripherals: serviceUUIDs is null");
         return nil;
@@ -207,7 +207,7 @@
 
 #pragma mark - Connect peripheral
 
-- (void)connectPeripheral:(BZPeripheral *)peripheral {
+- (void)connectPeripheral:(BZPeripheral *)peripheral{
     if (peripheral && peripheral.blePeripheral) {
         NSLog(@"ConnectPeripheral, peripheral %@", peripheral.UUIDString);
         [BZCentralManager runOnMainThread:^{
@@ -218,7 +218,7 @@
     }
 }
 
-- (void)cancelPeripheral:(BZPeripheral *)peripheral {
+- (void)cancelPeripheral:(BZPeripheral *)peripheral{
     if (peripheral && peripheral.blePeripheral) {
         NSLog(@"CancelPeripheral, peripheral %@", peripheral.UUIDString);
         [BZCentralManager runOnMainThread:^{
@@ -231,7 +231,7 @@
 
 #pragma mark - Multiple peripheral manager
 
-- (void)addPeripheral:(BZPeripheral *)peripheral {
+- (void)addPeripheral:(BZPeripheral *)peripheral{
     if (_multiplePeripheralController) {
         [_multiplePeripheralController addPeripheral:peripheral];
     } else {
@@ -239,7 +239,7 @@
     }
 }
 
-- (void)removePeripheral:(BZPeripheral *)peripheral {
+- (void)removePeripheral:(BZPeripheral *)peripheral{
     if (_multiplePeripheralController) {
         [_multiplePeripheralController removePeripheral:peripheral];
     } else {
@@ -247,7 +247,7 @@
     }
 }
 
-- (BZPeripheral *)getPeripheral:(NSString *)uuidString {
+- (BZPeripheral *)getPeripheral:(NSString *)uuidString{
     if (_multiplePeripheralController) {
         return [_multiplePeripheralController getPeripheral:uuidString];
     }
@@ -257,7 +257,7 @@
 
 #pragma mark - Delegates
 
-- (void)centralManagerDidUpdateState:(CBCentralManager *)central {
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central{
     switch (central.state) {
         case CBManagerStatePoweredOff:
             // When initialized, the state triggers PoweredOff first and then PoweredOn,
@@ -277,7 +277,7 @@
     }
 }
 
-- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advData RSSI:(NSNumber *)RSSI {
+- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advData RSSI:(NSNumber *)RSSI{
     [BZCentralManager runOnMainThread:^{
         BZPeripheral *newPeripheral = [[BZPeripheral alloc] initWithPeripheral:peripheral];
         newPeripheral.scannedRSSINumber = RSSI;
@@ -285,7 +285,7 @@
     }];
 }
 
-- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
+- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral{
     NSLog(@"didConnectPeripheral:%@(%@)", peripheral.name, peripheral.UUIDString);
     [BZCentralManager runOnMainThread:^{
         BZPeripheral *localPeripheral = [self getPeripheral:peripheral.UUIDString];
@@ -299,7 +299,7 @@
     }];
 }
 
-- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error{
     NSLog(@"didFailToConnectPeripheral:%@(%@)", peripheral.name, peripheral.UUIDString);
     [BZCentralManager runOnMainThread:^{
         BZPeripheral *localPeripheral = [self getPeripheral:peripheral.UUIDString];
@@ -315,7 +315,7 @@
     }];
 }
 
-- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error{
     NSLog(@"didDisconnectPeripheral:%@(%@) with error:%@", peripheral.name, peripheral.UUIDString, error);
     [BZCentralManager runOnMainThread:^{
         BZPeripheral *localPeripheral = [self getPeripheral:peripheral.UUIDString];
@@ -331,7 +331,7 @@
     }];
 }
 
-- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict {
+- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict{
     NSLog(@"willRestoreState:%@", dict ? dict.description : @"nil");
     [BZCentralManager runOnMainThread:^{
         NSArray *peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey];
