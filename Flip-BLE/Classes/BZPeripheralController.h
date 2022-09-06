@@ -22,17 +22,21 @@
 
 - (void)handleReadCallback:(CBCharacteristic *)charact error:(NSError *)error;
 
-- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error;
+- (void)handleNotifyStateCallback:(CBCharacteristic *)charact error:(NSError *)error;
 
-- (void)handleIndicateCallback:(CBCharacteristic *)charact error:(NSError *)error;
+- (void)handleNotifyValueCallback:(CBCharacteristic *)charact error:(NSError *)error;
+
+- (void)handleIndicateStateCallback:(CBCharacteristic *)charact error:(NSError *)error;
+
+- (void)handleIndicateValueCallback:(CBCharacteristic *)charact error:(NSError *)error;
 
 - (BOOL)readCharact:(ReadCallback)callback;
 
 - (BOOL)writeCharact:(NSData *)value callback:(WriteCallback)callback;
 
-- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback;
+- (BOOL)notifyCharact:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback;
 
-- (BOOL)indicateCharact:(BOOL)enable callback:(IndicateCallback)callback;
+- (BOOL)indicateCharact:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
 @end
 

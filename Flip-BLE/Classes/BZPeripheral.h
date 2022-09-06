@@ -25,10 +25,10 @@ typedef void (^DiscoverCallback)(BZPeripheral *peripheral, NSError *error);
 typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error);
 typedef void (^DiscoverCharactCallback)(CBService *service, NSError *error);
 typedef void (^RSSICallback)(NSNumber *value, NSError *error);
-typedef void (^NotifyCallback)(CBCharacteristic *charact, NSError * error);
-typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 typedef void (^ReadCallback)(CBCharacteristic *charact, NSError * error);
 typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^NotifyCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 
 @interface BZPeripheral : NSObject <CBPeripheralDelegate>
 
@@ -47,10 +47,12 @@ typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 - (NSMutableArray *)serviceBlocks;
 - (NSMutableDictionary *)charactBlocks;
 - (NSMutableArray *)rssiBlocks;
-- (NSMutableDictionary *)notifyBlocks;
-- (NSMutableDictionary *)indicateBlocks;
 - (NSMutableDictionary *)readBlocks;
 - (NSMutableDictionary *)writBlocks;
+- (NSMutableDictionary *)notifyStateBlocks;
+- (NSMutableDictionary *)notifyValueBlocks;
+- (NSMutableDictionary *)indicateStateBlocks;
+- (NSMutableDictionary *)indicateValueBlocks;
 
 - (void)cleanCallbacks;
 
@@ -88,17 +90,17 @@ typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
 
 - (BOOL)writeWithUUIDString:(NSString *)service charactUUID:(NSString *)write value:(NSData *)value callback:(WriteCallback)callback;
 
-- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
+- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback;
 
-- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback;
+- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback;
 
-- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback;
+- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback;
 
-- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback;
+- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
-- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(IndicateCallback)callback;
+- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
-- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(IndicateCallback)callback;
+- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
 @end
 

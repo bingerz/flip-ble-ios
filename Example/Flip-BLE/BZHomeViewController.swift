@@ -258,8 +258,10 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     
     func didScanning(_ peripheral: BZPeripheral!, advData: [AnyHashable : Any]!) {
         let advDataDic: [String: Any] = advData as? [String: Any] ?? [:]
-        let deviceName: NSString = NSString(string: advDataDic[CBAdvertisementDataLocalNameKey] as! String)
-        NSLog("Scan peripheral %@ name %@", peripheral.uuidString(), deviceName);
+        if let localName = advDataDic[CBAdvertisementDataLocalNameKey] {
+            let deviceName: NSString = NSString(string: localName as! String)
+            NSLog("Scan peripheral name %@ %@", deviceName, peripheral.uuidString());
+        }
         insertScannedDevice(peripheral)
         reloadTableView()
     }

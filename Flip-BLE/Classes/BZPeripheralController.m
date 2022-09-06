@@ -63,88 +63,6 @@
     return nil;
 }
 
-- (void)addNotifyCallback:(NotifyCallback)callback{
-    NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
-    NSMutableDictionary *characteristics = notifyBlocks[_service.UUID];
-    if (!characteristics) {
-        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
-        notifyBlocks[_service.UUID] = characteristics;
-    }
-    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
-    if (!callbacks) {
-        callbacks = [NSMutableArray arrayWithCapacity:1];
-        characteristics[_characteristic.UUID] = callbacks;
-    }
-    [callbacks addObject:[callback copy]];
-}
-
-- (void)removeNotifyCallback{
-    NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
-    NSMutableDictionary *characteristics = notifyBlocks[_service.UUID];
-    if (!characteristics) {
-        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
-        notifyBlocks[_service.UUID] = characteristics;
-    }
-    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
-    if (callbacks) {
-        [callbacks removeAllObjects];
-    }
-}
-
-- (void)handleNotifyCallback:(CBCharacteristic *)charact error:(NSError *)error{
-    NSMutableDictionary *notifyBlocks = [_peripheral notifyBlocks];
-    NSDictionary *characteristics = notifyBlocks[charact.service.UUID];
-    if (characteristics) {
-        NSMutableArray *array = characteristics[charact.UUID];
-        if (array.count > 0) {
-            for (NotifyCallback callback in array) {
-                callback(charact, error);
-            }
-        }
-    }
-}
-
-- (void)addIndicateCallback:(IndicateCallback)callback{
-    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
-    NSMutableDictionary *characteristics = indicateBlocks[_service.UUID];
-    if (!characteristics) {
-        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
-        indicateBlocks[_service.UUID] = characteristics;
-    }
-    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
-    if (!callbacks) {
-        callbacks = [NSMutableArray arrayWithCapacity:1];
-        characteristics[_characteristic.UUID] = callbacks;
-    }
-    [callbacks addObject:[callback copy]];
-}
-
-- (void)removeIndicateCallback{
-    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
-    NSMutableDictionary *characteristics = indicateBlocks[_service.UUID];
-    if (!characteristics) {
-        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
-        indicateBlocks[_service.UUID] = characteristics;
-    }
-    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
-    if (callbacks) {
-        [callbacks removeAllObjects];
-    }
-}
-
-- (void)handleIndicateCallback:(CBCharacteristic *)charact error:(NSError *)error{
-    NSMutableDictionary *indicateBlocks = [_peripheral indicateBlocks];
-    NSDictionary *characteristics = indicateBlocks[charact.service.UUID];
-    if (characteristics) {
-        NSMutableArray *array = characteristics[charact.UUID];
-        if (array.count > 0) {
-            for (IndicateCallback callback in array) {
-                callback(charact, error);
-            }
-        }
-    }
-}
-
 - (void)addReadCallback:(ReadCallback)callback{
     NSMutableDictionary *readBlocks = [_peripheral readBlocks];
     NSMutableDictionary *characteristics = readBlocks[_service.UUID];
@@ -170,6 +88,170 @@
                 block(charact, error);
             }
             [array removeAllObjects];
+        }
+    }
+}
+
+- (void)addNotifyStateCallback:(NotifyCallback)callback{
+    NSMutableDictionary *notifyStateBlocks = [_peripheral notifyStateBlocks];
+    NSMutableDictionary *characteristics = notifyStateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        notifyStateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (!callbacks) {
+        callbacks = [NSMutableArray arrayWithCapacity:1];
+        characteristics[_characteristic.UUID] = callbacks;
+    }
+    [callbacks addObject:[callback copy]];
+}
+
+- (void)removeNotifyStateCallback{
+    NSMutableDictionary *notifyStateBlocks = [_peripheral notifyStateBlocks];
+    NSMutableDictionary *characteristics = notifyStateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        notifyStateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (callbacks) {
+        [callbacks removeAllObjects];
+    }
+}
+
+- (void)handleNotifyStateCallback:(CBCharacteristic *)charact error:(NSError *)error{
+    NSMutableDictionary *notifyStateBlocks = [_peripheral notifyStateBlocks];
+    NSDictionary *characteristics = notifyStateBlocks[charact.service.UUID];
+    if (characteristics) {
+        NSMutableArray *array = characteristics[charact.UUID];
+        if (array.count > 0) {
+            for (NotifyCallback callback in array) {
+                callback(charact, error);
+            }
+        }
+    }
+}
+
+- (void)addNotifyValueCallback:(NotifyCallback)callback{
+    NSMutableDictionary *notifyValueBlocks = [_peripheral notifyValueBlocks];
+    NSMutableDictionary *characteristics = notifyValueBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        notifyValueBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (!callbacks) {
+        callbacks = [NSMutableArray arrayWithCapacity:1];
+        characteristics[_characteristic.UUID] = callbacks;
+    }
+    [callbacks addObject:[callback copy]];
+}
+
+- (void)removeNotifyValueCallback{
+    NSMutableDictionary *notifyValueBlocks = [_peripheral notifyValueBlocks];
+    NSMutableDictionary *characteristics = notifyValueBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        notifyValueBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (callbacks) {
+        [callbacks removeAllObjects];
+    }
+}
+
+- (void)handleNotifyValueCallback:(CBCharacteristic *)charact error:(NSError *)error{
+    NSMutableDictionary *notifyValueBlocks = [_peripheral notifyValueBlocks];
+    NSDictionary *characteristics = notifyValueBlocks[charact.service.UUID];
+    if (characteristics) {
+        NSMutableArray *array = characteristics[charact.UUID];
+        if (array.count > 0) {
+            for (NotifyCallback callback in array) {
+                callback(charact, error);
+            }
+        }
+    }
+}
+
+- (void)addIndicateStateCallback:(IndicateCallback)callback{
+    NSMutableDictionary *indicateStateBlocks = [_peripheral indicateStateBlocks];
+    NSMutableDictionary *characteristics = indicateStateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateStateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (!callbacks) {
+        callbacks = [NSMutableArray arrayWithCapacity:1];
+        characteristics[_characteristic.UUID] = callbacks;
+    }
+    [callbacks addObject:[callback copy]];
+}
+
+- (void)removeIndicateStateCallback{
+    NSMutableDictionary *indicateStateBlocks = [_peripheral indicateStateBlocks];
+    NSMutableDictionary *characteristics = indicateStateBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateStateBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (callbacks) {
+        [callbacks removeAllObjects];
+    }
+}
+
+- (void)handleIndicateStateCallback:(CBCharacteristic *)charact error:(NSError *)error{
+    NSMutableDictionary *indicateStateBlocks = [_peripheral indicateStateBlocks];
+    NSDictionary *characteristics = indicateStateBlocks[charact.service.UUID];
+    if (characteristics) {
+        NSMutableArray *array = characteristics[charact.UUID];
+        if (array.count > 0) {
+            for (IndicateCallback callback in array) {
+                callback(charact, error);
+            }
+        }
+    }
+}
+
+- (void)addIndicateValueCallback:(IndicateCallback)callback{
+    NSMutableDictionary *indicateValueBlocks = [_peripheral indicateValueBlocks];
+    NSMutableDictionary *characteristics = indicateValueBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateValueBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (!callbacks) {
+        callbacks = [NSMutableArray arrayWithCapacity:1];
+        characteristics[_characteristic.UUID] = callbacks;
+    }
+    [callbacks addObject:[callback copy]];
+}
+
+- (void)removeIndicateValueCallback{
+    NSMutableDictionary *indicateValueBlocks = [_peripheral indicateValueBlocks];
+    NSMutableDictionary *characteristics = indicateValueBlocks[_service.UUID];
+    if (!characteristics) {
+        characteristics = [NSMutableDictionary dictionaryWithCapacity:1];
+        indicateValueBlocks[_service.UUID] = characteristics;
+    }
+    NSMutableArray *callbacks = characteristics[_characteristic.UUID];
+    if (callbacks) {
+        [callbacks removeAllObjects];
+    }
+}
+
+- (void)handleIndicateValueCallback:(CBCharacteristic *)charact error:(NSError *)error{
+    NSMutableDictionary *indicateValueBlocks = [_peripheral indicateValueBlocks];
+    NSDictionary *characteristics = indicateValueBlocks[charact.service.UUID];
+    if (characteristics) {
+        NSMutableArray *array = characteristics[charact.UUID];
+        if (array.count > 0) {
+            for (IndicateCallback callback in array) {
+                callback(charact, error);
+            }
         }
     }
 }
@@ -241,8 +323,8 @@
     return NO;
 }
 
-- (BOOL)notifyCharact:(BOOL)enable callback:(NotifyCallback)callback{
-    if (!callback) {
+- (BOOL)notifyCharact:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback{
+    if (!stateCallback || !valueCallback) {
         NSLog(@"Notify failure, callback is null");
         return NO;
     }
@@ -250,37 +332,39 @@
     if (_blePeripheral && _characteristic) {
         if (_characteristic.properties & CBCharacteristicPropertyNotify) {
             if (enable) {
-                [self addNotifyCallback:callback];
+                [self addNotifyStateCallback:stateCallback];
+                [self addNotifyValueCallback:valueCallback];
             } else {
-                [self removeNotifyCallback];
+                [self removeNotifyStateCallback];
+                [self removeNotifyValueCallback];
             }
             if (enable ^ _characteristic.isNotifying) {
                 [_blePeripheral setNotifyValue:enable forCharacteristic:_characteristic];
             }
             return YES;
         } else {
-            if (callback) {
+            if (stateCallback) {
                 NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                           @"Notify characteristic fail", NSLocalizedDescriptionKey,
                                           @"Reason:Characteristic not support notify", NSLocalizedFailureReasonErrorKey, nil];
                 NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-                callback(_characteristic, error);
+                stateCallback(_characteristic, error);
             }
         }
     } else {
-        if (callback) {
+        if (stateCallback) {
             NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                       @"Notify characteristic fail", NSLocalizedDescriptionKey,
                                       @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
             NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-            callback(_characteristic, error);
+            stateCallback(_characteristic, error);
         }
     }
     return NO;
 }
 
-- (BOOL)indicateCharact:(BOOL)enable callback:(IndicateCallback)callback{
-    if (!callback) {
+- (BOOL)indicateCharact:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback{
+    if (!stateCallback || !valueCallback) {
         NSLog(@"Indicate failure, callback is null");
         return NO;
     }
@@ -288,30 +372,32 @@
     if (_blePeripheral && _characteristic) {
         if (_characteristic.properties & CBCharacteristicPropertyIndicate) {
             if (enable) {
-                [self addIndicateCallback:callback];
+                [self addIndicateStateCallback:stateCallback];
+                [self addIndicateValueCallback:valueCallback];
             } else {
-                [self removeIndicateCallback];
+                [self removeIndicateStateCallback];
+                [self removeIndicateValueCallback];
             }
             if (enable ^ _characteristic.isNotifying) {
                 [_blePeripheral setNotifyValue:enable forCharacteristic:_characteristic];
             }
             return YES;
         } else {
-            if (callback) {
+            if (stateCallback) {
                 NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                           @"Indicate characteristic fail", NSLocalizedDescriptionKey,
                                           @"Reason:Characteristic not support indicate", NSLocalizedFailureReasonErrorKey, nil];
                 NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-                callback(_characteristic, error);
+                stateCallback(_characteristic, error);
             }
         }
     } else {
-        if (callback) {
+        if (stateCallback) {
             NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                       @"Indicate characteristic fail", NSLocalizedDescriptionKey,
                                       @"Reason:Characteristic is null", NSLocalizedFailureReasonErrorKey, nil];
             NSError *error = [NTBLEError errorCode:ErrorCodeOther userInfo:userInfo];
-            callback(_characteristic, error);
+            stateCallback(_characteristic, error);
         }
     }
     return NO;

@@ -26,11 +26,14 @@
     NSMutableArray      *_discoverCallbacks;
     NSMutableArray      *_serviceCallbacks;
     NSMutableDictionary *_charactCallbacks;
+    
     NSMutableArray      *_rssiCallbacks;
-    NSMutableDictionary *_notifyCallbacks;
-    NSMutableDictionary *_indicateCallbacks;
     NSMutableDictionary *_readCallbacks;
     NSMutableDictionary *_writeCallbacks;
+    NSMutableDictionary *_notifyStateCallbacks;
+    NSMutableDictionary *_notifyValueCallbacks;
+    NSMutableDictionary *_indicateStateCallbacks;
+    NSMutableDictionary *_indicateValueCallbacks;
 }
 
 - (id)initWithPeripheral:(CBPeripheral *)blePeripheral{
@@ -177,20 +180,6 @@
     return _rssiCallbacks;
 }
 
-- (NSMutableDictionary *)notifyBlocks{
-    if (!_notifyCallbacks) {
-        _notifyCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
-    }
-    return _notifyCallbacks;
-}
-
-- (NSMutableDictionary *)indicateBlocks{
-    if (!_indicateCallbacks) {
-        _indicateCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
-    }
-    return _indicateCallbacks;
-}
-
 - (NSMutableDictionary *)readBlocks{
     if (!_readCallbacks) {
         _readCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
@@ -205,15 +194,45 @@
     return _writeCallbacks;
 }
 
+- (NSMutableDictionary *)notifyStateBlocks{
+    if (!_notifyStateCallbacks) {
+        _notifyStateCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    return _notifyStateCallbacks;
+}
+
+- (NSMutableDictionary *)notifyValueBlocks{
+    if (!_notifyValueCallbacks) {
+        _notifyValueCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    return _notifyValueCallbacks;
+}
+
+- (NSMutableDictionary *)indicateStateBlocks{
+    if (!_indicateStateCallbacks) {
+        _indicateStateCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    return _indicateStateCallbacks;
+}
+
+- (NSMutableDictionary *)indicateValueBlocks{
+    if (!_indicateValueCallbacks) {
+        _indicateValueCallbacks = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    return _indicateValueCallbacks;
+}
+
 - (void)cleanCallbacks {
     _discoverCallbacks = nil;
     _serviceCallbacks = nil;
     _charactCallbacks = nil;
     _rssiCallbacks  = nil;
-    _notifyCallbacks = nil;
-    _indicateCallbacks = nil;
     _readCallbacks  = nil;
     _writeCallbacks = nil;
+    _notifyStateCallbacks = nil;
+    _notifyValueCallbacks = nil;
+    _indicateStateCallbacks = nil;
+    _indicateValueCallbacks = nil;
 }
 
 - (void)addDiscoverCallback:(DiscoverCallback)block{
@@ -503,60 +522,60 @@
     return [self writeWithUUID:serviceUUID charactUUID:charactUUID value:value callback:callback];
 }
 
-- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable callback:(NotifyCallback)callback{
+- (BOOL)setNotifyWithCharact:(CBCharacteristic *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withCharact:notify];
         if (controller) {
-            return [controller notifyCharact:enable callback:callback];
+            return [controller notifyCharact:enable stateCallback:stateCallback valueCallback:valueCallback];
         }
     }
     return NO;
 }
 
-- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable callback:(NotifyCallback)callback{
+- (BOOL)setNotifyWithUUID:(CBUUID *)service charactUUID:(CBUUID *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withUUID:service charact:notify];
         if (controller) {
-            return [controller notifyCharact:enable callback:callback];
+            return [controller notifyCharact:enable stateCallback:stateCallback valueCallback:valueCallback];
         }
     }
     return NO;
 }
 
-- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable  callback:(NotifyCallback)callback{
+- (BOOL)setNotifyWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable stateCallback:(NotifyCallback)stateCallback valueCallback:(NotifyCallback)valueCallback{
     CBUUID *serviceUUID = [self formUUID:service];
     CBUUID *charactUUID = [self formUUID:notify];
-    return [self setNotifyWithUUID:serviceUUID charactUUID:charactUUID enable:enable callback:callback];
+    return [self setNotifyWithUUID:serviceUUID charactUUID:charactUUID enable:enable stateCallback:stateCallback valueCallback:valueCallback];
 }
 
-- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback{
+- (BOOL)setIndicateWithCharact:(CBCharacteristic *)indicate enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withCharact:indicate];
         if (controller) {
-            return [controller indicateCharact:enable callback:callback];
+            return [controller indicateCharact:enable stateCallback:stateCallback valueCallback:valueCallback];
         }
     }
     return NO;
 }
 
-- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)indicate enable:(BOOL)enable callback:(IndicateCallback)callback{
+- (BOOL)setIndicateWithUUID:(CBUUID *)service charactUUID:(CBUUID *)indicate enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withUUID:service charact:indicate];
         if (controller) {
-            return [controller indicateCharact:enable callback:callback];
+            return [controller indicateCharact:enable stateCallback:stateCallback valueCallback:valueCallback];
         }
     }
     return NO;
 }
 
-- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)indicate enable:(BOOL)enable  callback:(IndicateCallback)callback{
+- (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)indicate enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback{
     CBUUID *serviceUUID = [self formUUID:service];
     CBUUID *charactUUID = [self formUUID:indicate];
-    return [self setIndicateWithUUID:serviceUUID charactUUID:charactUUID enable:enable callback:callback];
+    return [self setIndicateWithUUID:serviceUUID charactUUID:charactUUID enable:enable stateCallback:stateCallback valueCallback:valueCallback];
 }
 
 #pragma mark - Peripheral delgate
@@ -590,13 +609,23 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     for (CBDescriptor *desc in characteristic.descriptors) {
-        NSLog(@"didDicoverDescriptor charact:%@, desc:%@",characteristic.UUIDString, desc.UUIDString);
+        NSLog(@"didDiscoverDescriptorForCharact:%@, desc:%@",characteristic.UUIDString, desc.UUIDString);
     }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     NSString *state = characteristic.isNotifying ? @"On" : @"Off";
     NSLog(@"didUpdateNotifyOrIndicate:%@, state:%@", characteristic.UUIDString, state);
+    BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
+    if (controller) {
+        CBUUID *serviceUUID = characteristic.service.UUID;
+        CBUUID *charactUUID = characteristic.UUID;
+        controller = [controller withUUID:serviceUUID charact:charactUUID];
+        if (controller) {
+            [controller handleNotifyStateCallback:characteristic error:error];
+            [controller handleIndicateStateCallback:characteristic error:error];
+        }
+    }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
@@ -608,8 +637,8 @@
         controller = [controller withUUID:serviceUUID charact:charactUUID];
         if (controller) {
             [controller handleReadCallback:characteristic error:error];
-            [controller handleNotifyCallback:characteristic error:error];
-            [controller handleIndicateCallback:characteristic error:error];
+            [controller handleNotifyValueCallback:characteristic error:error];
+            [controller handleIndicateValueCallback:characteristic error:error];
         }
     }
 }

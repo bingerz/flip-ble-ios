@@ -218,13 +218,14 @@ class BZCharacteristicViewController : UITableViewController {
             let charact = characteristics[sender.tag]
             if let peripheral = peripheral {
                 peripheral.setIndicateWithCharact(charact, enable: true) { (charact, error) in
+                    let writeData = Data([0x01, 0x01])
+                    peripheral.write(withCharact: charact, value: writeData) { (charact, error) in
+                        
+                    }
+                } valueCallback: { (charact, error) in
                     if let indicateData = charact?.value {
                         let result = String(data: indicateData, encoding: .ascii)
                     }
-                }
-                let writeData = Data([0x02, 0x01, 0x01])
-                peripheral.write(withCharact: charact, value: writeData) { (charact, error) in
-                    
                 }
             }
         }
