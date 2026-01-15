@@ -133,7 +133,7 @@ class BZPeripheralCell: UITableViewCell {
         self.contentView.addSubview(loadingIndicator)
 
         containerView.snp.makeConstraints { make in
-            make.height.equalTo(60)
+            make.height.equalTo(48)
             make.leading.equalToSuperview().offset(20)
             make.trailing.lessThanOrEqualToSuperview().offset(-170)
             make.centerY.equalToSuperview()
@@ -194,7 +194,7 @@ class BZPeripheralCell: UITableViewCell {
                 make.centerY.equalToSuperview()
             }
             containerView.snp.remakeConstraints { make in
-                make.height.equalTo(60)
+                make.height.equalTo(48)
                 make.leading.equalToSuperview().offset(20)
                 make.trailing.equalToSuperview().offset(-20)
                 make.centerY.equalToSuperview()
@@ -206,7 +206,7 @@ class BZPeripheralCell: UITableViewCell {
             disconnectButton.isHidden = true
             loadingIndicator.startAnimating()
             containerView.snp.remakeConstraints { make in
-                make.height.equalTo(60)
+                make.height.equalTo(48)
                 make.leading.equalToSuperview().offset(20)
                 make.trailing.equalToSuperview().offset(-20)
                 make.centerY.equalToSuperview()
@@ -233,7 +233,7 @@ class BZPeripheralCell: UITableViewCell {
                 make.centerY.equalToSuperview()
             }
             containerView.snp.remakeConstraints { make in
-                make.height.equalTo(60)
+                make.height.equalTo(48)
                 make.leading.equalToSuperview().offset(20)
                 make.trailing.lessThanOrEqualToSuperview().offset(-165)
                 make.centerY.equalToSuperview()
@@ -290,7 +290,7 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     func setupTableView() {
         tableView.register(BZPeripheralCell.self, forCellReuseIdentifier: cellId)
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-        tableView.separatorStyle = .none
+        tableView.separatorStyle = .singleLine
     }
     
     func setupHeaderView() {
@@ -363,7 +363,12 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     func startScanDevice() {
         let LLServiceUUID = "1803"
         let NTServiceUUID = "0900"
-        let scanServices = [CBUUID(string: LLServiceUUID), CBUUID(string: NTServiceUUID)]
+        let FMNAServiceUUID = "FD44"
+        let FMDNServiceUUID = "FE2C"
+        let FMDNEIDServiceUUID = "FEAA"
+        let scanServices = [CBUUID(string: LLServiceUUID), CBUUID(string: NTServiceUUID),
+                            CBUUID(string: FMNAServiceUUID), CBUUID(string: FMDNServiceUUID),
+                            CBUUID(string: FMDNEIDServiceUUID)]
         centralManager.startScan(withServices: scanServices, allowDup: false)
     }
     
@@ -482,7 +487,7 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 80
+        return 65
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {

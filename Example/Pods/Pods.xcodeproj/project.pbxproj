@@ -172,12 +172,12 @@
 		58D2E0A6E499EC4D14EB45A29204E1FD /* BZMultiplePeripheralController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BZMultiplePeripheralController.m; path = "Flip-BLE/Classes/BZMultiplePeripheralController.m"; sourceTree = "<group>"; };
 		594EC1E7A411E5C7151C6CC278D2E632 /* ConstraintMakerFinalizable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintMakerFinalizable.swift; path = Source/ConstraintMakerFinalizable.swift; sourceTree = "<group>"; };
 		5B1FCD73CFA7D77CBEFBB03252142B53 /* Typealiases.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Typealiases.swift; path = Source/Typealiases.swift; sourceTree = "<group>"; };
-		5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = FBSnapshotTestCase; path = FBSnapshotTestCase.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FBSnapshotTestCase.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		61FA09BDA047BB90052AF68DDA5CAFDD /* SnapKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = SnapKit.debug.xcconfig; sourceTree = "<group>"; };
 		62139C08F714CD0A7001FA0DE216333F /* FBSnapshotTestCase.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FBSnapshotTestCase.m; path = FBSnapshotTestCase/FBSnapshotTestCase.m; sourceTree = "<group>"; };
 		636539F8A98486E66FA890F16EF9341D /* Pods-Flip-BLE_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-Flip-BLE_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
 		68B3E1DC3BCD167601B5DE11677C2A29 /* BZCentralManager.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BZCentralManager.m; path = "Flip-BLE/Classes/BZCentralManager.m"; sourceTree = "<group>"; };
-		68E9363ED2188A3179997D056B42AD53 /* Pods-Flip-BLE_Tests */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-Flip-BLE_Tests"; path = Pods_Flip_BLE_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		68E9363ED2188A3179997D056B42AD53 /* Pods_Flip_BLE_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Flip_BLE_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F6509809195041E58D2D7A984E78AF4 /* SnapKit-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SnapKit-umbrella.h"; sourceTree = "<group>"; };
 		73907E4D7E279864A19F8EF256926572 /* Constraint.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Constraint.swift; path = Source/Constraint.swift; sourceTree = "<group>"; };
 		763BC099CE6531D5984B0A7F2A125F98 /* Flip-BLE.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Flip-BLE.release.xcconfig"; sourceTree = "<group>"; };
@@ -195,7 +195,7 @@
 		91AD59244F1DFD57C8110C151EEEDEF3 /* ConstraintConstantTarget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintConstantTarget.swift; path = Source/ConstraintConstantTarget.swift; sourceTree = "<group>"; };
 		93CDA9D4FF0D9BBFBD9E323A88F3F5E2 /* FBSnapshotTestController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FBSnapshotTestController.h; path = FBSnapshotTestCase/FBSnapshotTestController.h; sourceTree = "<group>"; };
 		944983B2937872376A4F1AA9FFB89C25 /* UIImage+Diff.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UIImage+Diff.m"; path = "FBSnapshotTestCase/Categories/UIImage+Diff.m"; sourceTree = "<group>"; };
-		979486118B3E90C08386079D57962701 /* SnapKit */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = SnapKit; path = SnapKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		979486118B3E90C08386079D57962701 /* SnapKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SnapKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		99FD09B2A3B86115ED739989E6CB14E1 /* FBSnapshotTestCase-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "FBSnapshotTestCase-umbrella.h"; sourceTree = "<group>"; };
 		9AB7638BD77F96DCE338494F29C00763 /* ConstraintMakerExtendable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConstraintMakerExtendable.swift; path = Source/ConstraintMakerExtendable.swift; sourceTree = "<group>"; };
 		9B089590F4D105863658870EF7C0923A /* FBSnapshotTestCase.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FBSnapshotTestCase.h; path = FBSnapshotTestCase/FBSnapshotTestCase.h; sourceTree = "<group>"; };
@@ -238,7 +238,7 @@
 		EF28E3F90F0BD32CED543346577AD7FA /* UILayoutSupport+Extensions.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "UILayoutSupport+Extensions.swift"; path = "Source/UILayoutSupport+Extensions.swift"; sourceTree = "<group>"; };
 		F5F4CC1D1D8D3696319B8056A2C463C1 /* Pods-Flip-BLE_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-Flip-BLE_Example.modulemap"; sourceTree = "<group>"; };
 		F6755EB462F708DE06F7B971D6280BF2 /* Flip-BLE.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Flip-BLE.debug.xcconfig"; sourceTree = "<group>"; };
-		F72E01D910A8ECC4AC6B92684DB964AB /* Pods-Flip-BLE_Example */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-Flip-BLE_Example"; path = Pods_Flip_BLE_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F72E01D910A8ECC4AC6B92684DB964AB /* Pods_Flip_BLE_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Flip_BLE_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F91B386ECCD710AA145FB170ECE4CF29 /* CBObject+BZAddition.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "CBObject+BZAddition.h"; path = "Flip-BLE/Classes/CBObject+BZAddition.h"; sourceTree = "<group>"; };
 		F99F159E6B5424FCD7DBC01CFC06D09C /* BZBLEError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BZBLEError.m; path = "Flip-BLE/Classes/BZBLEError.m"; sourceTree = "<group>"; };
 		F9C914C6154A4454AD62BA0AE762818F /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
@@ -368,11 +368,11 @@
 		4CE725305153F8274A05C009DCFB26CA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase */,
+				5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase.framework */,
 				4666578494C86883479171E91BE43949 /* Flip_BLE.framework */,
-				F72E01D910A8ECC4AC6B92684DB964AB /* Pods-Flip-BLE_Example */,
-				68E9363ED2188A3179997D056B42AD53 /* Pods-Flip-BLE_Tests */,
-				979486118B3E90C08386079D57962701 /* SnapKit */,
+				F72E01D910A8ECC4AC6B92684DB964AB /* Pods_Flip_BLE_Example.framework */,
+				68E9363ED2188A3179997D056B42AD53 /* Pods_Flip_BLE_Tests.framework */,
+				979486118B3E90C08386079D57962701 /* SnapKit.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -644,7 +644,7 @@
 			);
 			name = "Pods-Flip-BLE_Example";
 			productName = Pods_Flip_BLE_Example;
-			productReference = F72E01D910A8ECC4AC6B92684DB964AB /* Pods-Flip-BLE_Example */;
+			productReference = F72E01D910A8ECC4AC6B92684DB964AB /* Pods_Flip_BLE_Example.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		170F7C3231A45C20CB0F42A853307D03 /* Pods-Flip-BLE_Tests */ = {
@@ -664,7 +664,7 @@
 			);
 			name = "Pods-Flip-BLE_Tests";
 			productName = Pods_Flip_BLE_Tests;
-			productReference = 68E9363ED2188A3179997D056B42AD53 /* Pods-Flip-BLE_Tests */;
+			productReference = 68E9363ED2188A3179997D056B42AD53 /* Pods_Flip_BLE_Tests.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		19622742EBA51E823D6DAE3F8CDBFAD4 /* SnapKit */ = {
@@ -682,7 +682,7 @@
 			);
 			name = SnapKit;
 			productName = SnapKit;
-			productReference = 979486118B3E90C08386079D57962701 /* SnapKit */;
+			productReference = 979486118B3E90C08386079D57962701 /* SnapKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		98A98149697C80CEF8D5772791E92E66 /* FBSnapshotTestCase */ = {
@@ -700,7 +700,7 @@
 			);
 			name = FBSnapshotTestCase;
 			productName = FBSnapshotTestCase;
-			productReference = 5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase */;
+			productReference = 5C4F31330DFA99D699E4BDC8C3573D73 /* FBSnapshotTestCase.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		A0FF6C89718130D83F1547E1904C0910 /* Flip-BLE */ = {
@@ -927,7 +927,7 @@
 				GCC_PREFIX_HEADER = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase-prefix.pch";
 				INFOPLIST_FILE = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase.modulemap";
 				PRODUCT_MODULE_NAME = FBSnapshotTestCase;
@@ -1118,7 +1118,7 @@
 				GCC_PREFIX_HEADER = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase-prefix.pch";
 				INFOPLIST_FILE = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "Target Support Files/FBSnapshotTestCase/FBSnapshotTestCase.modulemap";
 				PRODUCT_MODULE_NAME = FBSnapshotTestCase;
