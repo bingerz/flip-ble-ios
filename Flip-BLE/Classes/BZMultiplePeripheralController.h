@@ -18,7 +18,7 @@
  *
  *  @return the shared instance with OS_LOG_DEFAULT.
  */
-@property (class, readonly, strong) BZMultiplePeripheralController *sharedInstance;
+@property (class, readonly) BZMultiplePeripheralController *sharedInstance;
 
 - (void)addPeripheral:(BZPeripheral *)peripheral;
 

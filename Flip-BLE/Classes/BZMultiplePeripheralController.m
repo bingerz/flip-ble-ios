@@ -37,7 +37,6 @@ static BZMultiplePeripheralController *sharedInstance;
 }
 
 - (void)dealloc{
-    [dicLock unlock];
     dicLock = nil;
     [peripherals removeAllObjects];
     peripherals = nil;
@@ -47,11 +46,12 @@ static BZMultiplePeripheralController *sharedInstance;
     if (!peripheral) {
         return;
     }
+    [dicLock lock];
     if ([peripherals BZ_isValidForKey:peripheral.UUIDString]) {
         NSLog(@"addPeripheral peripheral is existed %@", peripheral.UUIDString);
+        [dicLock unlock];
         return;
     }
-    [dicLock lock];
     peripherals[peripheral.UUIDString] = peripheral;
     [dicLock unlock];
 }
@@ -73,10 +73,13 @@ static BZMultiplePeripheralController *sharedInstance;
 }
 
 - (BZPeripheral *)getPeripheral:(NSString *)key{
+    [dicLock lock];
+    BZPeripheral *peripheral = nil;
     if ([peripherals BZ_isValidForKey:key]) {
-        return peripherals[key];
+        peripheral = peripherals[key];
     }
-    return nil;
+    [dicLock unlock];
+    return peripheral;
 }
 
 - (void)disconnectAllPeripheral{
@@ -89,7 +92,10 @@ static BZMultiplePeripheralController *sharedInstance;
 }
 
 - (NSArray *)getPeripherals{
-    return [peripherals allValues];
+    [dicLock lock];
+    NSArray *allPeripherals = [peripherals allValues];
+    [dicLock unlock];
+    return allPeripherals;
 }
 
 @end

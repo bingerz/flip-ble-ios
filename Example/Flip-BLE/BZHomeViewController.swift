@@ -11,22 +11,34 @@ import UIKit
 import SnapKit
 import CoreBluetooth
 
+enum BZPeripheralCellState {
+    case scanned
+    case connecting
+    case connected
+}
+
 class BZPeripheralCell: UITableViewCell {
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         initView()
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
-    
+
     deinit {
         peripheral = nil
     }
-    
+
     var peripheral: BZPeripheral? {
+        didSet {
+            updateDeviceViewState()
+        }
+    }
+
+    var cellState: BZPeripheralCellState = .scanned {
         didSet {
             updateDeviceViewState()
         }
@@ -61,7 +73,7 @@ class BZPeripheralCell: UITableViewCell {
 
     let funcButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Disconnect", for: .normal)
+        button.setTitle("Connect", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         button.setTitleColor(UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0), for: .normal)
         button.setTitleColor(UIUtils.color(red: 43, green: 186, blue: 152, alpha: 1.0), for: .highlighted)
@@ -77,46 +89,155 @@ class BZPeripheralCell: UITableViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
+
+    let disconnectButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Disconnect", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.setTitleColor(UIColor.red, for: .normal)
+        button.setTitleColor(UIColor.red.withAlphaComponent(0.7), for: .highlighted)
+        button.titleLabel?.minimumScaleFactor = 0.5
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
+        button.setBackgroundImage(UIUtils.createImageWithColor(UIColor.white), for: .normal)
+        button.setBackgroundImage(UIUtils.createImageWithColor(UIColor.red.withAlphaComponent(0.1)), for: .highlighted)
+        button.clipsToBounds = true
+        button.layer.cornerRadius = 18
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.red.cgColor
+        button.isUserInteractionEnabled = true
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        return button
+    }()
+
+    let loadingIndicator: UIActivityIndicatorView = {
+        if #available(iOS 13.0, *) {
+            let indicator = UIActivityIndicatorView(activityIndicatorStyle: .medium)
+            indicator.hidesWhenStopped = true
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+            return indicator
+        } else {
+            let indicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+            indicator.hidesWhenStopped = true
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+            return indicator
+        }
+    }()
     
     fileprivate func initView() {
         self.containerView.addSubview(nameLabel)
         self.containerView.addSubview(statusLabel)
         self.contentView.addSubview(containerView)
         self.contentView.addSubview(funcButton)
-        
+        self.contentView.addSubview(disconnectButton)
+        self.contentView.addSubview(loadingIndicator)
+
         containerView.snp.makeConstraints { make in
             make.height.equalTo(60)
             make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
+            make.trailing.lessThanOrEqualToSuperview().offset(-170)
             make.centerY.equalToSuperview()
         }
-        
+
         nameLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.equalToSuperview()
             make.trailing.equalToSuperview()
         }
-        
+
         statusLabel.snp.makeConstraints { make in
             make.top.equalTo(nameLabel.snp.bottom).offset(8)
             make.leading.equalToSuperview()
             make.trailing.equalToSuperview()
         }
-        
-        funcButton.snp.makeConstraints { make in
-            make.width.equalTo(100)
+
+        // Disconnect button (left side)
+        disconnectButton.snp.makeConstraints { make in
+            make.width.equalTo(70)
             make.height.equalTo(36)
-//            make.leading.equalTo(containerView.snp.trailing).offset(6)
-            make.trailing.equalToSuperview().offset(-40)
+            make.trailing.equalToSuperview().offset(-10)
+            make.centerY.equalToSuperview()
+        }
+
+        // Detail/Connect button (right side)
+        funcButton.snp.makeConstraints { make in
+            make.width.equalTo(70)
+            make.height.equalTo(36)
+            make.trailing.equalTo(disconnectButton.snp.leading).offset(-6)
+            make.centerY.equalToSuperview()
+        }
+
+        loadingIndicator.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-10)
             make.centerY.equalToSuperview()
         }
     }
     
     fileprivate func updateDeviceViewState() {
-        if let peripheral = peripheral {
-            nameLabel.text = peripheral.name()
+        guard let peripheral = peripheral else { return }
+
+        nameLabel.text = peripheral.name()
+
+        switch cellState {
+        case .scanned:
             statusLabel.text = "RSSI: \(peripheral.scannedRSSINumber.intValue)"
-            funcButton.setTitle(peripheral.isConnected() ? "Detail" : "Connect", for: .normal)
+            funcButton.isHidden = false
+            disconnectButton.isHidden = true
+            loadingIndicator.stopAnimating()
+            funcButton.setTitle("Connect", for: .normal)
+            funcButton.isEnabled = true
+            // Connect 按钮保持原样
+            funcButton.snp.remakeConstraints { make in
+                make.width.equalTo(100)
+                make.height.equalTo(36)
+                make.trailing.equalToSuperview().offset(-40)
+                make.centerY.equalToSuperview()
+            }
+            containerView.snp.remakeConstraints { make in
+                make.height.equalTo(60)
+                make.leading.equalToSuperview().offset(20)
+                make.trailing.equalToSuperview().offset(-20)
+                make.centerY.equalToSuperview()
+            }
+
+        case .connecting:
+            statusLabel.text = "Connecting..."
+            funcButton.isHidden = true
+            disconnectButton.isHidden = true
+            loadingIndicator.startAnimating()
+            containerView.snp.remakeConstraints { make in
+                make.height.equalTo(60)
+                make.leading.equalToSuperview().offset(20)
+                make.trailing.equalToSuperview().offset(-20)
+                make.centerY.equalToSuperview()
+            }
+
+        case .connected:
+            statusLabel.text = "RSSI: \(peripheral.scannedRSSINumber.intValue)"
+            funcButton.isHidden = false
+            disconnectButton.isHidden = false
+            loadingIndicator.stopAnimating()
+            funcButton.setTitle("Detail", for: .normal)
+            funcButton.isEnabled = true
+            // 已连接状态：两个按钮都显示
+            funcButton.snp.remakeConstraints { make in
+                make.width.equalTo(65)
+                make.height.equalTo(36)
+                make.trailing.equalTo(disconnectButton.snp.leading).offset(-6)
+                make.centerY.equalToSuperview()
+            }
+            disconnectButton.snp.remakeConstraints { make in
+                make.width.equalTo(75)
+                make.height.equalTo(36)
+                make.trailing.equalToSuperview().offset(-10)
+                make.centerY.equalToSuperview()
+            }
+            containerView.snp.remakeConstraints { make in
+                make.height.equalTo(60)
+                make.leading.equalToSuperview().offset(20)
+                make.trailing.lessThanOrEqualToSuperview().offset(-165)
+                make.centerY.equalToSuperview()
+            }
         }
     }
 }
@@ -131,8 +252,9 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     
     private let BTN_TAG_RESCAN      = 1;
     private let BTN_TAG_RETRIEVE    = 2;
-    
+
     fileprivate var scannedPeripheralArray = [BZPeripheral]()
+    fileprivate var connectingPeripheralArray = [BZPeripheral]()
     fileprivate var connectedPeripheralArray = [BZPeripheral]()
     
     var centralManager: BZCentralManager = BZCentralManager.default()
@@ -221,11 +343,19 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     func removeScannedDevice(_ perpheral: BZPeripheral) {
         scannedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
     }
-    
+
+    func insertConnectingDevice(_ peripheral: BZPeripheral) {
+        connectingPeripheralArray.append(peripheral)
+    }
+
+    func removeConnectingDevice(_ peripheral: BZPeripheral) {
+        connectingPeripheralArray.removeAll { $0.uuidString() == peripheral.uuidString() }
+    }
+
     func insertConnectedDevice(_ perpheral: BZPeripheral) {
         connectedPeripheralArray.append(perpheral)
     }
-    
+
     func removeConnectedDevice(_ perpheral: BZPeripheral) {
         connectedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
     }
@@ -267,7 +397,8 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     func didConnecting() {
-        
+        // 移动到连接中分组
+        reloadTableView()
     }
     
     func didRetrieve(_ peripheral: BZPeripheral!) {
@@ -283,19 +414,23 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     func didConnected(_ peripheral: BZPeripheral!) {
+        // 从连接中移除，添加到已连接
+        removeConnectingDevice(peripheral)
+        insertConnectedDevice(peripheral)
+
         peripheral.discoverServices { (peripheral, error) in
-            if let peripheral = peripheral {
-                DispatchQueue.main.async {
-                    self.removeScannedDevice(peripheral)
-                    self.insertConnectedDevice(peripheral)
-                    self.reloadTableView()
-                }
+            // 服务发现完成
+            DispatchQueue.main.async {
+                self.reloadTableView()
             }
         }
     }
     
     func didConnectError(_ peripheral: BZPeripheral!, error: Error!) {
-        
+        // 从连接中移除，放回扫描列表
+        removeConnectingDevice(peripheral)
+        insertScannedDevice(peripheral)
+        reloadTableView()
     }
     
     func didDisconnected(_ peripheral: BZPeripheral!, error: Error!) {
@@ -308,6 +443,11 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
         peripheral.connectStateDelegate = self
         centralManager.add(peripheral)
         centralManager.connect(peripheral)
+
+        // 添加到连接中列表，并从扫描列表移除
+        removeScannedDevice(peripheral)
+        insertConnectingDevice(peripheral)
+        reloadTableView()
     }
     
     @objc func disconnectButtonClicked(sender: UIButton) {
@@ -329,11 +469,16 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 2
+        return 3  // Connected, Connecting, Scanned
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return section == 0 ? connectedPeripheralArray.count : scannedPeripheralArray.count
+        switch section {
+        case 0: return connectedPeripheralArray.count
+        case 1: return connectingPeripheralArray.count
+        case 2: return scannedPeripheralArray.count
+        default: return 0
+        }
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -341,20 +486,46 @@ class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStat
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return section == 0 ? "Connected Device" : "Scanned Device"
+        switch section {
+        case 0: return "Connected Device"
+        case 1: return "Connecting Device"
+        case 2: return "Scanned Device"
+        default: return nil
+        }
     }
-    
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellId) as! BZPeripheralCell
-        if indexPath.section == 0 {
-            cell.peripheral = connectedPeripheralArray[indexPath.row]
-            cell.funcButton.tag = indexPath.row;
+
+        switch indexPath.section {
+        case 0: // Connected
+            let peripheral = connectedPeripheralArray[indexPath.row]
+            cell.peripheral = peripheral
+            cell.cellState = .connected
+            cell.funcButton.tag = indexPath.row
+            cell.funcButton.removeTarget(nil, action: nil, for: .touchUpInside)
             cell.funcButton.addTarget(self, action: #selector(viewButtonClicked(sender:)), for: .touchUpInside)
-        } else if indexPath.section == 1 {
-            cell.peripheral = scannedPeripheralArray[indexPath.row]
-            cell.funcButton.tag = indexPath.row;
+            cell.disconnectButton.tag = indexPath.row
+            cell.disconnectButton.removeTarget(nil, action: nil, for: .touchUpInside)
+            cell.disconnectButton.addTarget(self, action: #selector(disconnectButtonClicked(sender:)), for: .touchUpInside)
+
+        case 1: // Connecting
+            let peripheral = connectingPeripheralArray[indexPath.row]
+            cell.peripheral = peripheral
+            cell.cellState = .connecting
+
+        case 2: // Scanned
+            let peripheral = scannedPeripheralArray[indexPath.row]
+            cell.peripheral = peripheral
+            cell.cellState = .scanned
+            cell.funcButton.tag = indexPath.row
+            cell.funcButton.removeTarget(nil, action: nil, for: .touchUpInside)
             cell.funcButton.addTarget(self, action: #selector(connectButtonClicked(sender:)), for: .touchUpInside)
+
+        default:
+            break
         }
+
         return cell
     }
     

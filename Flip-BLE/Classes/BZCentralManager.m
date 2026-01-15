@@ -17,7 +17,6 @@
     CBCentralManager *_centralManager;
     BZMultiplePeripheralController *_multiplePeripheralController;
 }
-@property (nonatomic, strong, readwrite) NSDictionary *services;
 @end
 
 @implementation BZCentralManager
