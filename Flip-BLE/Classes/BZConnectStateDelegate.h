@@ -18,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @optional
 - (void)didConnecting;
+- (void)didConnectingPeripheral:(BZPeripheral *)peripheral;
 
 - (void)didRetrieve:(BZPeripheral *)peripheral;
 - (void)didRetrieveConnected:(BZPeripheral *)peripheral;

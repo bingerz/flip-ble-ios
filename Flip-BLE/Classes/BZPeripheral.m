@@ -113,6 +113,10 @@
     return _blePeripheral && _blePeripheral.state == CBPeripheralStateConnected;
 }
 
+- (BZPeripheralState)state {
+    return _state;
+}
+
 - (void)updateBLEPeripheral:(CBPeripheral *)blePeripheral{
     if (blePeripheral) {
         _blePeripheral = blePeripheral;
@@ -326,7 +330,12 @@
     [[BZCentralManager defaultManager] addPeripheral:self];
     [[BZCentralManager defaultManager] connectPeripheral:self];
     _state = BZPeripheralStateConnecting;
-    [_connectStateDelegate didConnecting];
+    if ([_connectStateDelegate respondsToSelector:@selector(didConnecting)]) {
+        [_connectStateDelegate didConnecting];
+    }
+    if ([_connectStateDelegate respondsToSelector:@selector(didConnectingPeripheral:)]) {
+        [_connectStateDelegate didConnectingPeripheral:self];
+    }
     return YES;
 }
 

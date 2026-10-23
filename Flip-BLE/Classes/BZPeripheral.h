@@ -49,6 +49,7 @@ typedef void (^IndicateCallback)(CBCharacteristic * _Nullable characteristic, NS
 @property (nonatomic, readonly, nullable) NSArray<CBService *> *services;
 @property (nonatomic, readonly, getter=isConnecting) BOOL connecting;
 @property (nonatomic, readonly, getter=isConnected) BOOL connected;
+@property (nonatomic, readonly) BZPeripheralState state;
 
 - (void)updateBLEPeripheral:(CBPeripheral *)peripheral;
 - (void)updateStateWithBLEPeripheral:(CBPeripheral *)blePeripheral;

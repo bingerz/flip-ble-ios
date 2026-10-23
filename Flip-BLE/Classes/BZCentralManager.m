@@ -55,11 +55,13 @@
 
 - (void)startCentralWithOptions:(NSDictionary<NSString *, id> *)options{
     if (!_centralManager) {
+        if (!_multiplePeripheralController) {
+            _multiplePeripheralController = [BZMultiplePeripheralController sharedInstance];
+        }
         dispatch_queue_global_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         _centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                         queue:queue
                                                       options:options];
-        _multiplePeripheralController = [BZMultiplePeripheralController sharedInstance];
         NSLog(@"BZCentralManager startCentral finish");
     }
 }
@@ -335,12 +337,24 @@
     NSLog(@"willRestoreState:%@", dict ? dict.description : @"nil");
     [BZCentralManager runOnMainThread:^{
         NSArray *peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey];
+        BOOL reportsRestore = [self.centralStateDelegate respondsToSelector:@selector(centralDidRestorePeripheral:)];
         for (CBPeripheral *peripheral in peripherals) {
             BZPeripheral *localPeripheral = [self getPeripheral:peripheral.UUIDString];
-            if (localPeripheral) {
-                [localPeripheral updateBLEPeripheral:peripheral];
-                [localPeripheral updateStateWithBLEPeripheral:peripheral];
+            BOOL alreadyTracked = localPeripheral != nil;
+            if (!alreadyTracked) {
+                if (!reportsRestore) {
+                    continue;
+                }
+                localPeripheral = [[BZPeripheral alloc] initWithPeripheral:peripheral];
+                [self addPeripheral:localPeripheral];
+            }
+            [localPeripheral updateBLEPeripheral:peripheral];
+            [localPeripheral updateStateWithBLEPeripheral:peripheral];
+            if (alreadyTracked && [localPeripheral.connectStateDelegate respondsToSelector:@selector(didRestored:)]) {
                 [localPeripheral.connectStateDelegate didRestored:localPeripheral];
+            }
+            if (reportsRestore) {
+                [self.centralStateDelegate centralDidRestorePeripheral:localPeripheral];
             }
         }
     }];

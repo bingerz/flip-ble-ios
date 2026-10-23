@@ -10,11 +10,16 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
+@class BZPeripheral;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol BZCentralStateDelegate <NSObject>
 
 - (void)centralDidUpdateState:(CBManagerState)state;
+
+@optional
+- (void)centralDidRestorePeripheral:(BZPeripheral *)peripheral;
 
 @end
 

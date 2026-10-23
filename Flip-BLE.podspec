@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Flip-BLE'
-  s.version          = '0.5.1'
+  s.version          = '0.5.2'
   s.summary          = 'An easy-to-use Bluetooth development framework for the iOS platform.'
 
 # This description is used to generate tags and improve search results.
@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => 'https://github.com/bingerz/flip-ble-ios.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '12.0'
+  s.ios.deployment_target = '15.0'
   s.swift_version = '5.5'
   s.frameworks = 'CoreBluetooth'
 
