@@ -8,9 +8,11 @@
 #ifndef BZConnectStateDelegate_h
 #define BZConnectStateDelegate_h
 
-#import "BZPeripheral.h"
+#import <Foundation/Foundation.h>
 
 @class BZPeripheral;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol BZConnectStateDelegate <NSObject>
 
@@ -20,10 +22,12 @@
 - (void)didRetrieve:(BZPeripheral *)peripheral;
 - (void)didRetrieveConnected:(BZPeripheral *)peripheral;
 - (void)didConnected:(BZPeripheral *)peripheral;
-- (void)didConnectError:(BZPeripheral *)peripheral error:(NSError *)error;
-- (void)didDisconnected:(BZPeripheral *)peripheral error:(NSError *)error;
+- (void)didConnectError:(BZPeripheral *)peripheral error:(nullable NSError *)error;
+- (void)didDisconnected:(BZPeripheral *)peripheral error:(nullable NSError *)error;
 - (void)didRestored:(BZPeripheral *)peripheral;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZConnectStateDelegate_h */

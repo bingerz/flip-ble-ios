@@ -10,6 +10,7 @@
 #import "CBObject+BZAddition.h"
 #import "BZBLEError.h"
 #import "BZPeripheralController.h"
+#import "BZPeripheralController+Internal.h"
 #import "BZMultiplePeripheralController.h"
 #import "BZPeripheral.h"
 
@@ -371,7 +372,7 @@
     }
 }
 
-- (BOOL)discoverService:(NSArray *)serviceUUIDs callback:(DiscoverServiceCallback)callback{
+- (BOOL)discoverService:(nullable NSArray<CBUUID *> *)serviceUUIDs callback:(DiscoverServiceCallback)callback{
     if ([self isConnected]) {
         //[discoverLock lock];
         if (_state != BZPeripheralStateDiscovering) {
@@ -396,7 +397,7 @@
     }
 }
 
-- (BOOL)discoverCharact:(NSArray *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback{
+- (BOOL)discoverCharact:(nullable NSArray<CBUUID *> *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback{
     if ([self isConnected]) {
         [self addDiscoverCharactCallback:service.UUID callback:callback];
         [self discoverCharacteristicsOnMainThread:charactUUIDs forService:service];
@@ -494,7 +495,7 @@
     return [self readWithUUID:serviceUUID charactUUID:charactUUID callback:callback];
 }
 
-- (BOOL)writeWithCharact:(CBCharacteristic *)write  value:(NSData *)value callback:(ReadCallback)callback{
+- (BOOL)writeWithCharact:(CBCharacteristic *)write  value:(NSData *)value callback:(WriteCallback)callback{
     BZPeripheralController *controller = [[BZPeripheralController alloc] initWithPeripheral:self];
     if (controller) {
         controller = [controller withCharact:write];

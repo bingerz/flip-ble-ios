@@ -1,223 +1,178 @@
-//
-//  BZOperationViewController.swift
-//  Flip-BLE_Example
-//
-//  Created by Hanson on 2022/9/3.
-//  Copyright © 2022 hanbing0604@aliyun.com. All rights reserved.
-//
-
-import Foundation
+import CoreBluetooth
+import Flip_BLE
+import SnapKit
 import UIKit
 
-class BZServiceCell: UITableViewCell {
-    
+private final class ServiceCell: UITableViewCell {
+    private let titleLabel = UILabel()
+    private let uuidLabel = UILabel()
+    private let detailLabel = UILabel()
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        initView()
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
-    deinit {
-        btService = nil
-    }
-    
-    var btService: CBService? {
-        didSet {
-            updateCellViewState()
-        }
-    }
-    
-    let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .black
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let subTitleLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .gray
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let descLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .gray
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let containerView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.clipsToBounds = true
-        return view
-    }()
-
-    let funcButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("View", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        button.setTitleColor(UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0), for: .normal)
-        button.setTitleColor(UIUtils.color(red: 43, green: 186, blue: 152, alpha: 1.0), for: .highlighted)
-        button.titleLabel?.minimumScaleFactor = 0.5
-        button.titleLabel?.adjustsFontSizeToFitWidth = true
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 1.0)), for: .normal)
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 242, green: 255, blue: 252, alpha: 1.0)), for: .highlighted)
-        button.clipsToBounds = true
-        button.layer.cornerRadius = 16
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0).cgColor
-        button.isUserInteractionEnabled = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    fileprivate func initView() {
-        self.containerView.addSubview(titleLabel)
-        self.containerView.addSubview(subTitleLabel)
-        self.containerView.addSubview(descLabel)
-        self.contentView.addSubview(containerView)
-        self.contentView.addSubview(funcButton)
-        
-        containerView.snp.makeConstraints { make in
-            make.height.equalTo(80)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
+        accessoryType = .disclosureIndicator
+        backgroundColor = DemoStyle.card
+        DemoStyle.applyLabel(titleLabel, style: .headline)
+        DemoStyle.applyIdentifier(uuidLabel, color: .secondaryLabel)
+        DemoStyle.applyLabel(detailLabel, style: .caption1, color: .tertiaryLabel)
+        let stack = UIStackView(arrangedSubviews: [titleLabel, uuidLabel, detailLabel])
+        stack.axis = .vertical
+        stack.spacing = 4
+        contentView.addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-8)
             make.centerY.equalToSuperview()
-        }
-        
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-        }
-        
-        subTitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-        }
-        
-        descLabel.snp.makeConstraints { make in
-            make.top.equalTo(subTitleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-        }
-        
-        funcButton.snp.makeConstraints { make in
-            make.width.equalTo(72)
-            make.height.equalTo(32)
-            make.trailing.equalToSuperview().offset(-20)
-            make.centerY.equalToSuperview().offset(20)
+            make.top.greaterThanOrEqualToSuperview().offset(10)
+            make.bottom.lessThanOrEqualToSuperview().offset(-10)
         }
     }
-    
-    fileprivate func updateCellViewState() {
-        if let service = btService {
-            var characteristicCount = 0
-            if let count = service.characteristics?.count {
-                characteristicCount = count
-            }
-            titleLabel.text = "Service<\(String(describing: characteristicCount))>"
-            subTitleLabel.text = service.uuid.uuidString
-            descLabel.text = "Service Type: \(service.isPrimary ? "Primary" : "Secondary")"
-        }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(_ service: CBService) {
+        let count = service.characteristics?.count ?? 0
+        titleLabel.text = "Service (\(count))"
+        uuidLabel.text = service.uuid.uuidString
+        detailLabel.text = service.isPrimary ? "Primary" : "Secondary"
     }
 }
 
-class BZOperationViewController : UITableViewController {
-    
-    private let cellId = "CellId"
-    
-    @objc var peripheral: BZPeripheral?
-    
-    deinit {
-        
+class BZOperationViewController: UITableViewController {
+
+    var peripheral: BLEPeripheral?
+    var deviceName: String?
+    var advertisementData: [String: Any] = [:]
+
+    private let cellId = "ServiceCell"
+    private let connectionWatch = DemoConnectionWatch()
+    private let retryItem = UIBarButtonItem(title: "Retry Discover", style: .plain, target: nil, action: nil)
+    private let retrySpinner = UIActivityIndicatorView(style: .medium)
+
+    init() {
+        super.init(style: .insetGrouped)
     }
-    
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Service List"
-        setupTableView()
+        title = "Services"
+        view.backgroundColor = DemoStyle.canvas
+        tableView.backgroundColor = DemoStyle.canvas
+        tableView.register(ServiceCell.self, forCellReuseIdentifier: cellId)
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 78
+        retryItem.target = self
+        retryItem.action = #selector(retryDiscover)
+        navigationItem.rightBarButtonItem = retryItem
+        setupHeader()
+        refreshEmptyState()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        reloadTableView()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-    }
-    
-    func setupTableView() {
-        tableView.register(BZServiceCell.self, forCellReuseIdentifier: cellId)
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-        tableView.separatorStyle = .none
-    }
-    
-    func reloadTableView() {
         tableView.reloadData()
+        refreshEmptyState()
+        connectionWatch.start(peripheral: peripheral, navigationController: navigationController)
     }
-    
-    @objc func viewButtonClicked(sender: UIButton) {
-        if let services = peripheral?.blePeripheral().services {
-            showCharactList(services[sender.tag])
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        connectionWatch.stop()
+    }
+
+    private func setupHeader() {
+        guard let peripheral = peripheral else { return }
+        let nameLabel = UILabel()
+        DemoStyle.applyLabel(nameLabel, style: .headline)
+        nameLabel.text = deviceName ?? peripheral.name ?? "Unknown"
+        nameLabel.numberOfLines = 0
+        let idLabel = UILabel()
+        DemoStyle.applyLabel(idLabel, style: .caption1, color: .secondaryLabel)
+        idLabel.text = peripheral.uuidString
+        idLabel.numberOfLines = 0
+        let advLabel = UILabel()
+        DemoStyle.applyLabel(advLabel, style: .caption1, color: .tertiaryLabel)
+        advLabel.text = DemoAdvertisementSummary.text(from: advertisementData)
+        advLabel.numberOfLines = 0
+        advLabel.isHidden = advLabel.text?.isEmpty ?? true
+
+        let stack = UIStackView(arrangedSubviews: [nameLabel, idLabel, advLabel])
+        stack.axis = .vertical
+        stack.spacing = 4
+        let card = UIView()
+        card.backgroundColor = DemoStyle.card
+        card.layer.cornerRadius = 12
+        card.layer.borderWidth = 1
+        DemoStyle.refreshBorder(of: card.layer, color: DemoStyle.hairline, traits: traitCollection)
+        let header = UIView()
+        header.backgroundColor = .clear
+        header.addSubview(card)
+        card.addSubview(stack)
+        card.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 4, right: 16))
+        }
+        stack.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12))
+        }
+        let width = UIScreen.main.bounds.width
+        header.frame = CGRect(x: 0, y: 0, width: width, height: 1)
+        let height = header.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+        header.frame = CGRect(x: 0, y: 0, width: width, height: max(height, 44))
+        tableView.tableHeaderView = header
+    }
+
+    private func refreshEmptyState() {
+        DemoStyle.refreshEmptyState(for: tableView, rowCount: peripheral?.services.count ?? 0, text: "No services discovered\nTap Retry Discover to try again")
+    }
+
+    @objc private func retryDiscover() {
+        guard let peripheral = peripheral else { return }
+        retryItem.isEnabled = false
+        let spinnerItem = UIBarButtonItem(customView: retrySpinner)
+        navigationItem.rightBarButtonItem = spinnerItem
+        retrySpinner.startAnimating()
+        Task { @MainActor in
+            defer {
+                self.retrySpinner.stopAnimating()
+                self.navigationItem.rightBarButtonItem = self.retryItem
+                self.retryItem.isEnabled = true
+                self.refreshEmptyState()
+            }
+            do {
+                try await peripheral.discoverServices()
+                self.tableView.reloadData()
+            } catch {
+                let alert = UIAlertController(title: "Discover failed", message: error.localizedDescription, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(alert, animated: true)
+            }
         }
     }
-    
-    func showCharactList(_ service: CBService?) {
-        if let service = service {
-            let vc = BZCharacteristicViewController()
-            vc.peripheral = peripheral
-            vc.service = service
-            navigationController?.pushViewController(vc, animated: true)
-        }
-    }
-    
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if let count = peripheral?.blePeripheral().services?.count {
-            return count
-        }
-        return 0
+        peripheral?.services.count ?? 0
     }
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 100
-    }
-    
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellId) as! BZServiceCell
-        if let services = peripheral?.blePeripheral().services {
-            cell.btService = services[indexPath.row]
-            cell.funcButton.tag = indexPath.row;
-            cell.funcButton.addTarget(self, action: #selector(viewButtonClicked(sender:)), for: .touchUpInside)
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! ServiceCell
+        if let service = peripheral?.services[indexPath.row] {
+            cell.update(service)
         }
         return cell
     }
-    
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        if self.tableView == tableView {
-            
-        }
+        guard let peripheral = peripheral, indexPath.row < peripheral.services.count else { return }
+        let controller = BZCharacteristicViewController()
+        controller.peripheral = peripheral
+        controller.service = peripheral.services[indexPath.row]
+        navigationController?.pushViewController(controller, animated: true)
     }
 }

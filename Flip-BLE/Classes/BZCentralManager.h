@@ -13,32 +13,25 @@
 
 #import "BZScanDelegate.h"
 #import "BZCentralStateDelegate.h"
+#import "BZPeripheral.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface BZCentralManager : NSObject <CBCentralManagerDelegate>
 
 @property (nonatomic, assign, readwrite, getter = isScanning) BOOL scanning;
 
-@property (nonatomic, readonly) CBCentralManager *centralManager;
+@property (nonatomic, readonly, nullable) CBCentralManager *centralManager;
 
-/*!
- *  @property delegate
- *
- *  @discussion The delegate object that will receive peripheral connection state events.
- */
-@property (nonatomic, retain) id<BZScanDelegate> scanDelegate;
+@property (nonatomic, retain, nullable) id<BZScanDelegate> scanDelegate;
 
-/*!
- * @property delegate
- *
- * @discussion The delegate object that will receive centralManager state events.
- */
-@property (nonatomic, retain) id<BZCentralStateDelegate> centralStateDelegate;
+@property (nonatomic, retain, nullable) id<BZCentralStateDelegate> centralStateDelegate;
 
 + (BZCentralManager *)defaultManager;
 + (void)runOnMainThread:(void (^)(void))block;
 
-- (void)startCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert;
-- (void)restartCentralWithRestoreIdKey:(NSString *)key showPowerAlert:(BOOL)showAlert;
+- (void)startCentralWithRestoreIdKey:(nullable NSString *)key showPowerAlert:(BOOL)showAlert;
+- (void)restartCentralWithRestoreIdKey:(nullable NSString *)key showPowerAlert:(BOOL)showAlert;
 - (void)destroyCentral;
 
 - (BOOL)isStateUnknown;
@@ -48,23 +41,21 @@
 - (BOOL)isStatePoweredOff;
 - (BOOL)isStatePoweredOn;
 
-// Scan peripheral
-- (void)startScanWithServices:(NSArray<CBUUID *> *)serviceUUIDs allowDup:(BOOL)allowDup;
+- (void)startScanWithServices:(nullable NSArray<CBUUID *> *)serviceUUIDs allowDup:(BOOL)allowDup;
 - (void)stopScan;
 
-// Retrieve peripheral
-- (NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers;
-- (NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs;
+- (nullable NSArray<BZPeripheral *> *)retrievePeripherals:(NSArray<NSString *> *)identifiers;
+- (nullable NSArray<BZPeripheral *> *)retrieveConnectedPeripherals:(NSArray<CBUUID *> *)serviceUUIDs;
 
-// Connect peripheral
 - (void)connectPeripheral:(BZPeripheral *)peripheral;
 - (void)cancelPeripheral:(BZPeripheral *)peripheral;
 
-// Multiple peripheral manager
 - (void)addPeripheral:(BZPeripheral *)peripheral;
 - (void)removePeripheral:(BZPeripheral *)peripheral;
-- (BZPeripheral *)getPeripheral:(NSString *)uuidString;
+- (nullable BZPeripheral *)getPeripheral:(NSString *)uuidString;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZCentralManager_h */

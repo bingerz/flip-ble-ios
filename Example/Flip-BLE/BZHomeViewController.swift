@@ -1,612 +1,618 @@
-//
-//  BZHomeViewController.swift
-//  Flip-BLE_Example
-//
-//  Created by Hanson on 2022/8/19.
-//  Copyright © 2022 hanbing0604@aliyun.com. All rights reserved.
-//
-
-import Foundation
-import UIKit
-import SnapKit
 import CoreBluetooth
+import Flip_BLE
+import SnapKit
+import UIKit
 
-enum BZPeripheralCellState {
+private enum DeviceLinkState {
     case scanned
     case connecting
     case connected
 }
 
-class BZPeripheralCell: UITableViewCell {
+private final class DemoDevice {
+    let peripheral: BLEPeripheral
+    var state: DeviceLinkState
+    var displayName: String
+    var advertisementData: [String: Any]
+
+    init(peripheral: BLEPeripheral, displayName: String, advertisementData: [String: Any] = [:]) {
+        self.peripheral = peripheral
+        self.state = .scanned
+        self.displayName = displayName
+        self.advertisementData = advertisementData
+    }
+
+    var identifier: String {
+        peripheral.uuidString
+    }
+}
+
+private final class DemoDeviceCell: UITableViewCell {
+    var onConnect: (() -> Void)?
+    var onDisconnect: (() -> Void)?
+    var onEnter: (() -> Void)?
+
+    private let card = UIView()
+    private let nameLabel = UILabel()
+    private let detailLabel = UILabel()
+    private let rssiLabel = UILabel()
+    private let unitLabel = UILabel()
+    private let signalBars = DemoSignalBars()
+    private let statusLabel = DemoChipLabel()
+    private let iconWell = UIView()
+    private let iconView = UIImageView()
+    private let chipStack = UIStackView()
+    private let connectButton = UIButton(type: .system)
+    private let disconnectButton = UIButton(type: .system)
+    private let enterButton = UIButton(type: .system)
+    private let spinner = UIActivityIndicatorView(style: .medium)
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        initView()
+        selectionStyle = .none
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+
+        card.layer.cornerRadius = 12
+        card.layer.borderWidth = 1
+        refreshCard()
+
+        DemoStyle.applyLabel(nameLabel, style: .headline, weight: .semibold)
+        nameLabel.numberOfLines = 1
+        nameLabel.lineBreakMode = .byTruncatingTail
+        DemoStyle.applyIdentifier(detailLabel, color: DemoStyle.slate)
+        let rssiFont = UIFont.monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+        rssiLabel.font = UIFontMetrics(forTextStyle: .callout).scaledFont(for: rssiFont)
+        rssiLabel.adjustsFontForContentSizeCategory = true
+        rssiLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        DemoStyle.applyLabel(unitLabel, style: .caption2, color: DemoStyle.slate)
+        unitLabel.text = "dBm"
+        statusLabel.apply(text: "Connected", foreground: DemoStyle.accent, background: DemoStyle.chipFill)
+
+        iconView.image = UIImage(systemName: "wave.3.right")
+        iconView.contentMode = .scaleAspectFit
+        iconWell.layer.cornerRadius = 8
+        iconWell.clipsToBounds = true
+
+        DemoStyle.applyFilled(connectButton, title: "Connect", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        DemoStyle.applyOutline(disconnectButton, title: "Disconnect", color: .systemRed)
+        DemoStyle.applyFilled(enterButton, title: "Enter", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        connectButton.accessibilityLabel = "Connect"
+        disconnectButton.accessibilityLabel = "Disconnect"
+        enterButton.accessibilityLabel = "Enter device"
+        connectButton.addTarget(self, action: #selector(connectTapped), for: .touchUpInside)
+        disconnectButton.addTarget(self, action: #selector(disconnectTapped), for: .touchUpInside)
+        enterButton.addTarget(self, action: #selector(enterTapped), for: .touchUpInside)
+        spinner.hidesWhenStopped = true
+        for button in [connectButton, disconnectButton, enterButton] {
+            button.setContentCompressionResistancePriority(.required, for: .horizontal)
+            button.setContentHuggingPriority(.required, for: .horizontal)
+        }
+
+        chipStack.axis = .horizontal
+        chipStack.spacing = 6
+        chipStack.alignment = .center
+        chipStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let textStack = UIStackView(arrangedSubviews: [nameLabel, detailLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 2
+        textStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let signalRow = UIStackView(arrangedSubviews: [rssiLabel, unitLabel, signalBars])
+        signalRow.axis = .horizontal
+        signalRow.alignment = .center
+        signalRow.spacing = 4
+        signalRow.setContentCompressionResistancePriority(.required, for: .horizontal)
+        signalRow.setContentHuggingPriority(.required, for: .horizontal)
+        let topRow = UIStackView(arrangedSubviews: [iconWell, textStack, signalRow])
+        topRow.axis = .horizontal
+        topRow.alignment = .center
+        topRow.spacing = 10
+
+        let actionStack = UIStackView(arrangedSubviews: [connectButton, disconnectButton, enterButton, spinner])
+        actionStack.axis = .horizontal
+        actionStack.spacing = 8
+        actionStack.alignment = .center
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let actionRow = UIStackView(arrangedSubviews: [statusLabel, chipStack, spacer, actionStack])
+        actionRow.axis = .horizontal
+        actionRow.alignment = .center
+        actionRow.spacing = 8
+
+        let column = UIStackView(arrangedSubviews: [topRow, actionRow])
+        column.axis = .vertical
+        column.spacing = 10
+        iconWell.addSubview(iconView)
+        card.addSubview(column)
+        contentView.addSubview(card)
+
+        iconWell.snp.makeConstraints { make in
+            make.width.height.equalTo(32)
+        }
+        iconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(16)
+        }
+        card.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(6)
+            make.bottom.equalToSuperview().offset(-6)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+        }
+        column.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12))
+        }
     }
 
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
+        fatalError("init(coder:) has not been implemented")
     }
 
-    deinit {
-        peripheral = nil
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) else { return }
+        refreshCard()
+        DemoStyle.applyFilled(connectButton, title: "Connect", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        DemoStyle.refreshBorder(of: disconnectButton.layer, color: .systemRed, traits: traitCollection)
+        DemoStyle.applyFilled(enterButton, title: "Enter", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        statusLabel.apply(text: "Connected", foreground: DemoStyle.accent, background: DemoStyle.chipFill)
     }
 
-    var peripheral: BZPeripheral? {
-        didSet {
-            updateDeviceViewState()
-        }
+    private func refreshCard() {
+        card.backgroundColor = DemoStyle.card
+        iconWell.backgroundColor = DemoStyle.chipFill
+        iconView.tintColor = DemoStyle.primaryFill
+        DemoStyle.refreshBorder(of: card.layer, color: DemoStyle.hairline, traits: traitCollection)
     }
 
-    var cellState: BZPeripheralCellState = .scanned {
-        didSet {
-            updateDeviceViewState()
-        }
-    }
-    
-    let nameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .black
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let statusLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .gray
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let containerView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.clipsToBounds = true
-        return view
-    }()
-
-    let funcButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Connect", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        button.setTitleColor(UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0), for: .normal)
-        button.setTitleColor(UIUtils.color(red: 43, green: 186, blue: 152, alpha: 1.0), for: .highlighted)
-        button.titleLabel?.minimumScaleFactor = 0.5
-        button.titleLabel?.adjustsFontSizeToFitWidth = true
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 1.0)), for: .normal)
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 242, green: 255, blue: 252, alpha: 1.0)), for: .highlighted)
-        button.clipsToBounds = true
-        button.layer.cornerRadius = 18
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0).cgColor
-        button.isUserInteractionEnabled = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
-    let disconnectButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Disconnect", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        button.setTitleColor(UIColor.red, for: .normal)
-        button.setTitleColor(UIColor.red.withAlphaComponent(0.7), for: .highlighted)
-        button.titleLabel?.minimumScaleFactor = 0.5
-        button.titleLabel?.adjustsFontSizeToFitWidth = true
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIColor.white), for: .normal)
-        button.setBackgroundImage(UIUtils.createImageWithColor(UIColor.red.withAlphaComponent(0.1)), for: .highlighted)
-        button.clipsToBounds = true
-        button.layer.cornerRadius = 18
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.red.cgColor
-        button.isUserInteractionEnabled = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isHidden = true
-        return button
-    }()
-
-    let loadingIndicator: UIActivityIndicatorView = {
-        if #available(iOS 13.0, *) {
-            let indicator = UIActivityIndicatorView(activityIndicatorStyle: .medium)
-            indicator.hidesWhenStopped = true
-            indicator.translatesAutoresizingMaskIntoConstraints = false
-            return indicator
+    func update(_ device: DemoDevice) {
+        nameLabel.text = device.displayName
+        detailLabel.text = device.identifier
+        let rssi = device.peripheral.rssi?.intValue
+        if let rssi = rssi {
+            rssiLabel.text = "\(rssi)"
+            rssiLabel.textColor = DemoSignal.color(for: rssi)
         } else {
-            let indicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
-            indicator.hidesWhenStopped = true
-            indicator.translatesAutoresizingMaskIntoConstraints = false
-            return indicator
+            rssiLabel.text = "—"
+            rssiLabel.textColor = DemoStyle.slate
         }
-    }()
-    
-    fileprivate func initView() {
-        self.containerView.addSubview(nameLabel)
-        self.containerView.addSubview(statusLabel)
-        self.contentView.addSubview(containerView)
-        self.contentView.addSubview(funcButton)
-        self.contentView.addSubview(disconnectButton)
-        self.contentView.addSubview(loadingIndicator)
-
-        containerView.snp.makeConstraints { make in
-            make.height.equalTo(48)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.lessThanOrEqualToSuperview().offset(-170)
-            make.centerY.equalToSuperview()
-        }
-
-        nameLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-        }
-
-        statusLabel.snp.makeConstraints { make in
-            make.top.equalTo(nameLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-        }
-
-        // Disconnect button (left side)
-        disconnectButton.snp.makeConstraints { make in
-            make.width.equalTo(70)
-            make.height.equalTo(36)
-            make.trailing.equalToSuperview().offset(-10)
-            make.centerY.equalToSuperview()
-        }
-
-        // Detail/Connect button (right side)
-        funcButton.snp.makeConstraints { make in
-            make.width.equalTo(70)
-            make.height.equalTo(36)
-            make.trailing.equalTo(disconnectButton.snp.leading).offset(-6)
-            make.centerY.equalToSuperview()
-        }
-
-        loadingIndicator.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-10)
-            make.centerY.equalToSuperview()
-        }
-    }
-    
-    fileprivate func updateDeviceViewState() {
-        guard let peripheral = peripheral else { return }
-
-        nameLabel.text = peripheral.name()
-
-        switch cellState {
+        signalBars.apply(rssi: rssi)
+        reloadChips(DemoAdvertisementSummary.chips(from: device.advertisementData))
+        let connected = device.state == .connected
+        statusLabel.isHidden = !connected
+        chipStack.isHidden = connected || chipStack.arrangedSubviews.isEmpty
+        switch device.state {
         case .scanned:
-            statusLabel.text = "RSSI: \(peripheral.scannedRSSINumber.intValue)"
-            funcButton.isHidden = false
+            connectButton.isHidden = false
             disconnectButton.isHidden = true
-            loadingIndicator.stopAnimating()
-            funcButton.setTitle("Connect", for: .normal)
-            funcButton.isEnabled = true
-            // Connect 按钮保持原样
-            funcButton.snp.remakeConstraints { make in
-                make.width.equalTo(100)
-                make.height.equalTo(36)
-                make.trailing.equalToSuperview().offset(-40)
-                make.centerY.equalToSuperview()
-            }
-            containerView.snp.remakeConstraints { make in
-                make.height.equalTo(48)
-                make.leading.equalToSuperview().offset(20)
-                make.trailing.equalToSuperview().offset(-20)
-                make.centerY.equalToSuperview()
-            }
-
+            enterButton.isHidden = true
+            spinner.stopAnimating()
         case .connecting:
-            statusLabel.text = "Connecting..."
-            funcButton.isHidden = true
+            connectButton.isHidden = true
             disconnectButton.isHidden = true
-            loadingIndicator.startAnimating()
-            containerView.snp.remakeConstraints { make in
-                make.height.equalTo(48)
-                make.leading.equalToSuperview().offset(20)
-                make.trailing.equalToSuperview().offset(-20)
-                make.centerY.equalToSuperview()
-            }
-
+            enterButton.isHidden = true
+            spinner.startAnimating()
         case .connected:
-            statusLabel.text = "RSSI: \(peripheral.scannedRSSINumber.intValue)"
-            funcButton.isHidden = false
+            connectButton.isHidden = true
             disconnectButton.isHidden = false
-            loadingIndicator.stopAnimating()
-            funcButton.setTitle("Detail", for: .normal)
-            funcButton.isEnabled = true
-            // 已连接状态：两个按钮都显示
-            funcButton.snp.remakeConstraints { make in
-                make.width.equalTo(65)
-                make.height.equalTo(36)
-                make.trailing.equalTo(disconnectButton.snp.leading).offset(-6)
-                make.centerY.equalToSuperview()
-            }
-            disconnectButton.snp.remakeConstraints { make in
-                make.width.equalTo(75)
-                make.height.equalTo(36)
-                make.trailing.equalToSuperview().offset(-10)
-                make.centerY.equalToSuperview()
-            }
-            containerView.snp.remakeConstraints { make in
-                make.height.equalTo(48)
-                make.leading.equalToSuperview().offset(20)
-                make.trailing.lessThanOrEqualToSuperview().offset(-165)
-                make.centerY.equalToSuperview()
-            }
+            enterButton.isHidden = false
+            spinner.stopAnimating()
         }
     }
+
+    private func reloadChips(_ texts: [String]) {
+        chipStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for text in texts {
+            let chip = DemoChipLabel()
+            chip.apply(text: text, foreground: DemoStyle.slate, background: DemoStyle.chipFill)
+            chip.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            chip.lineBreakMode = .byTruncatingTail
+            chipStack.addArrangedSubview(chip)
+        }
+    }
+
+    @objc private func connectTapped() { onConnect?() }
+    @objc private func disconnectTapped() { onDisconnect?() }
+    @objc private func enterTapped() { onEnter?() }
 }
 
-fileprivate extension Selector{
-    static let headerBtnAction  = #selector(BZHomeViewController.headerBtnAction(_:))
-}
+class BZHomeViewController: UITableViewController {
 
-class BZHomeViewController: UITableViewController, BZScanDelegate, BZCentralStateDelegate, BZConnectStateDelegate {
-    
-    private let cellId = "CellId"
-    
-    private let BTN_TAG_RESCAN      = 1;
-    private let BTN_TAG_RETRIEVE    = 2;
+    private let cellId = "DemoDeviceCell"
+    private let central = BLECentral.shared
 
-    fileprivate var scannedPeripheralArray = [BZPeripheral]()
-    fileprivate var connectingPeripheralArray = [BZPeripheral]()
-    fileprivate var connectedPeripheralArray = [BZPeripheral]()
-    
-    var centralManager: BZCentralManager = BZCentralManager.default()
-    
-    deinit {
-        
-    }
-    
-    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
+    private var devices: [DemoDevice] = []
+    private var isScanning = false
+    private var stateTask: Task<Void, Never>?
+    private var scanTask: Task<Void, Never>?
+
+    private let headerView = UIView()
+    private let filterStack = UIStackView()
+    private let nameField = UITextField()
+    private let identifierField = UITextField()
+    private let uuidField = UITextField()
+    private let uuidHintLabel = UILabel()
+    private let filterToggleButton = UIButton(type: .system)
+    private let scanButton = UIButton(type: .system)
+    private let scanSpinner = UIActivityIndicatorView(style: .medium)
+    private let scanStateLabel = DemoChipLabel()
+    private let countLabel = UILabel()
+    private var filtersExpanded = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "FlipBLE"
-        setupTableView()
-        setupHeaderView()
-        initCentralManager()
+        title = "flipBLE"
+        view.backgroundColor = DemoStyle.canvas
+        tableView.backgroundColor = DemoStyle.canvas
+        tableView.separatorStyle = .none
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Sort", style: .plain, target: self, action: #selector(sortDevices))
+        tableView.register(DemoDeviceCell.self, forCellReuseIdentifier: cellId)
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 92
+        tableView.keyboardDismissMode = .onDrag
+        setupHeader()
+        startCentral()
+        NotificationCenter.default.addObserver(self, selector: #selector(deviceDisconnected(_:)), name: .demoPeripheralDisconnected, object: nil)
+        refreshList()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-    }
-    
-    func setupTableView() {
-        tableView.register(BZPeripheralCell.self, forCellReuseIdentifier: cellId)
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-        tableView.separatorStyle = .singleLine
-    }
-    
-    func setupHeaderView() {
-        var headerView: UIView?
-        headerView = createHeaderView()
-        if headerView != nil {
-            tableView.tableHeaderView?.removeFromSuperview()
-            tableView.tableHeaderView = headerView
+        for device in devices where device.state == .connected && !device.peripheral.isConnected {
+            device.state = .scanned
         }
+        refillConnectedDevices()
+        refreshList()
     }
-    
-    @IBAction func headerBtnAction(_ sender: UIButton) {
-        switch sender.tag {
-        case BTN_TAG_RESCAN:
-            stopScanDevice()
-            scannedPeripheralArray.removeAll()
-            reloadTableView()
-            startScanDevice()
-        case BTN_TAG_RETRIEVE:
-            let retrieveDeviceArray = centralManager.retrievePeripherals(["661B2DDA-C234-E43C-646F-200FDFF21499", "DBD28847-DDDC-4B45-902D-326A7E70C780"])
-            if let array = retrieveDeviceArray {
-                NSLog("retrievePeripherals count %d", array.count)
-            }
-        default:
-            break
-        }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
-    
-    func reloadTableView() {
+
+    private func refreshList() {
         tableView.reloadData()
-    }
-    
-    func initCentralManager() {
-        let restoreIdKey = "BZCentralManagerRestorationIdentifier"
-        centralManager = BZCentralManager.default()
-        centralManager.startCentral(withRestoreIdKey: restoreIdKey, showPowerAlert: true)
-        centralManager.scanDelegate = self
-        centralManager.centralStateDelegate = self
-    }
-    
-    func destroyCentralManager() {
-        stopScanDevice()
-        centralManager.destroyCentral()
-    }
-    
-    func insertScannedDevice(_ perpheral: BZPeripheral) {
-        scannedPeripheralArray.append(perpheral)
-    }
-    
-    func removeScannedDevice(_ perpheral: BZPeripheral) {
-        scannedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
+        let count = devices.count
+        countLabel.text = count == 1 ? "1 peripheral" : "\(count) peripherals"
+        scanStateLabel.apply(
+            text: isScanning ? "SCANNING" : "IDLE",
+            foreground: isScanning ? DemoStyle.accent : DemoStyle.slate,
+            background: DemoStyle.chipFill
+        )
+        let text = isScanning ? "Scanning…\nNo matching devices yet" : "No devices yet\nTap Start Scan to search nearby BLE devices"
+        DemoStyle.refreshEmptyState(for: tableView, rowCount: devices.count, text: text)
     }
 
-    func insertConnectingDevice(_ peripheral: BZPeripheral) {
-        connectingPeripheralArray.append(peripheral)
+    private func setupHeader() {
+        headerView.backgroundColor = DemoStyle.canvas
+        configureField(nameField, placeholder: "Name, comma-separated")
+        configureField(identifierField, placeholder: "Identifier, comma-separated")
+        configureField(uuidField, placeholder: "Service UUID, comma-separated")
+        nameField.addTarget(self, action: #selector(nameOrIdentifierFilterChanged), for: .editingChanged)
+        identifierField.addTarget(self, action: #selector(nameOrIdentifierFilterChanged), for: .editingChanged)
+        uuidField.addTarget(self, action: #selector(uuidFieldChanged), for: .editingChanged)
+        filterStack.axis = .vertical
+        filterStack.spacing = 8
+        filterStack.addArrangedSubview(nameField)
+        filterStack.addArrangedSubview(identifierField)
+        filterStack.addArrangedSubview(uuidField)
+        filterStack.isHidden = true
+
+        DemoStyle.applyLabel(uuidHintLabel, style: .caption1, color: .systemOrange)
+        uuidHintLabel.numberOfLines = 0
+        uuidHintLabel.isHidden = true
+
+        filterToggleButton.setTitle("Expand scanning settings", for: .normal)
+        filterToggleButton.titleLabel?.font = DemoStyle.font(.footnote)
+        filterToggleButton.titleLabel?.adjustsFontForContentSizeCategory = true
+        filterToggleButton.addTarget(self, action: #selector(toggleFilters), for: .touchUpInside)
+
+        DemoStyle.applyFilled(scanButton, title: "Start Scan", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        scanButton.addTarget(self, action: #selector(scanButtonTapped), for: .touchUpInside)
+        scanSpinner.hidesWhenStopped = true
+        scanStateLabel.apply(text: "IDLE", foreground: DemoStyle.slate, background: DemoStyle.chipFill)
+        DemoStyle.applyLabel(countLabel, style: .caption1, color: DemoStyle.slate)
+        countLabel.text = "0 peripherals"
+
+        scanButton.snp.makeConstraints { make in
+            make.width.greaterThanOrEqualTo(140)
+        }
+        let statusRow = UIStackView(arrangedSubviews: [scanStateLabel, UIView(), countLabel])
+        statusRow.axis = .horizontal
+        statusRow.alignment = .center
+        let scanRow = UIStackView(arrangedSubviews: [scanButton, scanSpinner])
+        scanRow.axis = .horizontal
+        scanRow.spacing = 12
+        scanRow.alignment = .center
+        let column = UIStackView(arrangedSubviews: [statusRow, filterStack, uuidHintLabel, filterToggleButton, scanRow])
+        column.axis = .vertical
+        column.spacing = 8
+        column.alignment = .center
+        headerView.addSubview(column)
+        column.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-12)
+        }
+        filterStack.snp.makeConstraints { make in
+            make.width.equalTo(column)
+        }
+        statusRow.snp.makeConstraints { make in
+            make.width.equalTo(column)
+        }
+        uuidHintLabel.snp.makeConstraints { make in
+            make.width.equalTo(column)
+        }
+        applyHeader(expanded: false)
     }
 
-    func removeConnectingDevice(_ peripheral: BZPeripheral) {
-        connectingPeripheralArray.removeAll { $0.uuidString() == peripheral.uuidString() }
+    private func configureField(_ field: UITextField, placeholder: String) {
+        field.placeholder = placeholder
+        field.font = DemoStyle.font(.subheadline)
+        field.adjustsFontForContentSizeCategory = true
+        field.borderStyle = .roundedRect
+        field.backgroundColor = .systemBackground
+        field.textColor = .label
+        field.autocapitalizationType = .none
+        field.autocorrectionType = .no
+        field.clearButtonMode = .whileEditing
     }
 
-    func insertConnectedDevice(_ perpheral: BZPeripheral) {
-        connectedPeripheralArray.append(perpheral)
+    private func applyHeader(expanded: Bool) {
+        filtersExpanded = expanded
+        filterStack.isHidden = !expanded
+        if !expanded {
+            uuidHintLabel.isHidden = true
+        } else {
+            refreshUUIDHint()
+        }
+        filterToggleButton.setTitle(expanded ? "Collapse scanning settings" : "Expand scanning settings", for: .normal)
+        let width = tableView.bounds.width > 0 ? tableView.bounds.width : UIScreen.main.bounds.width
+        headerView.frame = CGRect(x: 0, y: 0, width: width, height: 1)
+        let height = headerView.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        headerView.frame = CGRect(x: 0, y: 0, width: width, height: max(height, 1))
+        tableView.tableHeaderView = headerView
     }
 
-    func removeConnectedDevice(_ perpheral: BZPeripheral) {
-        connectedPeripheralArray.removeAll { $0.uuidString() == perpheral.uuidString() }
+    @objc private func uuidFieldChanged() {
+        refreshUUIDHint()
     }
-    
-    func startScanDevice() {
-        let LLServiceUUID = "1803"
-        let NTServiceUUID = "0900"
-        let FMNAServiceUUID = "FD44"
-        let FMDNServiceUUID = "FE2C"
-        let FMDNEIDServiceUUID = "FEAA"
-        let scanServices = [CBUUID(string: LLServiceUUID), CBUUID(string: NTServiceUUID),
-                            CBUUID(string: FMNAServiceUUID), CBUUID(string: FMDNServiceUUID),
-                            CBUUID(string: FMDNEIDServiceUUID)]
-        centralManager.startScan(withServices: scanServices, allowDup: false)
+
+    @objc private func nameOrIdentifierFilterChanged() {
+        applyNameIdentifierFilters()
     }
-    
-    func stopScanDevice() {
-        centralManager.stopScan()
-    }
-    
-    func centralDidUpdate(_ state: CBManagerState) {
-        switch (state) {
-        case .poweredOff:
-            NSLog("centralDidUpdateState poweredOff")
-            stopScanDevice()
-            break;
-        case .poweredOn:
-            NSLog("centralDidUpdateState poweredOn");
-            startScanDevice()
-            break;
-        default:
-            break;
+
+    /// Drop scanned rows that no longer match Name/ID filters; keep connecting/connected.
+    private func applyNameIdentifierFilters() {
+        let nameFilter = nameField.text ?? ""
+        let identifierFilter = identifierField.text ?? ""
+        let before = devices.count
+        devices.removeAll { device in
+            guard device.state == .scanned else { return false }
+            return !DemoScanRules.passesFilters(
+                name: device.displayName,
+                identifier: device.identifier,
+                nameFilter: nameFilter,
+                identifierFilter: identifierFilter
+            )
+        }
+        if devices.count != before {
+            refreshList()
         }
     }
-    
-    func didScanning(_ peripheral: BZPeripheral!, advData: [AnyHashable : Any]!) {
-        let advDataDic: [String: Any] = advData as? [String: Any] ?? [:]
-        if let localName = advDataDic[CBAdvertisementDataLocalNameKey] {
-            let deviceName: NSString = NSString(string: localName as! String)
-            NSLog("Scan peripheral name %@ %@", deviceName, peripheral.uuidString());
-        }
-        insertScannedDevice(peripheral)
-        reloadTableView()
-    }
-    
-    func didConnecting() {
-        // 移动到连接中分组
-        reloadTableView()
-    }
-    
-    func didRetrieve(_ peripheral: BZPeripheral!) {
-        
-    }
-    
-    func didRestored(_ peripheral: BZPeripheral!) {
-        
-    }
-    
-    func didRetrieveConnected(_ peripheral: BZPeripheral!) {
-        
-    }
-    
-    func didConnected(_ peripheral: BZPeripheral!) {
-        // 从连接中移除，添加到已连接
-        removeConnectingDevice(peripheral)
-        insertConnectedDevice(peripheral)
 
-        peripheral.discoverServices { (peripheral, error) in
-            // 服务发现完成
-            DispatchQueue.main.async {
-                self.reloadTableView()
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) else { return }
+        let title = DemoStyle.buttonTitle(scanButton, fallback: "Start Scan")
+        DemoStyle.applyFilled(scanButton, title: title, color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+    }
+
+    private func refreshUUIDHint() {
+        let invalid = DemoScanRules.invalidUUIDTokens(from: uuidField.text ?? "")
+        guard filtersExpanded, !invalid.isEmpty else {
+            uuidHintLabel.isHidden = true
+            return
+        }
+        uuidHintLabel.isHidden = false
+        if DemoScanRules.usesDefaultServiceUUIDs(from: uuidField.text ?? "") {
+            uuidHintLabel.text = "Invalid Service UUID: \(invalid.joined(separator: ", ")). Using default services \(DemoScanRules.defaultServiceUUIDStrings.joined(separator: ", "))."
+        } else {
+            uuidHintLabel.text = "Invalid Service UUID ignored: \(invalid.joined(separator: ", "))"
+        }
+    }
+
+    private func startCentral() {
+        let states = central.observeState()
+        central.start(restoreIdentifier: "BZCentralManagerRestorationIdentifier", showPowerAlert: true)
+        stateTask = Task { @MainActor in
+            for await state in states {
+                if state == .poweredOff {
+                    self.stopScan()
+                    DemoFeedback.show(message: "Bluetooth is off", in: self.view)
+                } else if state == .unauthorized {
+                    DemoFeedback.show(message: "Bluetooth permission denied", in: self.view)
+                }
             }
         }
     }
-    
-    func didConnectError(_ peripheral: BZPeripheral!, error: Error!) {
-        // 从连接中移除，放回扫描列表
-        removeConnectingDevice(peripheral)
-        insertScannedDevice(peripheral)
-        reloadTableView()
-    }
-    
-    func didDisconnected(_ peripheral: BZPeripheral!, error: Error!) {
-        removeConnectedDevice(peripheral)
-        reloadTableView()
-    }
-    
-    @objc func connectButtonClicked(sender: UIButton) {
-        let peripheral = scannedPeripheralArray[sender.tag]
-        peripheral.connectStateDelegate = self
-        centralManager.add(peripheral)
-        centralManager.connect(peripheral)
 
-        // 添加到连接中列表，并从扫描列表移除
-        removeScannedDevice(peripheral)
-        insertConnectingDevice(peripheral)
-        reloadTableView()
+    @objc private func toggleFilters() {
+        view.endEditing(true)
+        applyHeader(expanded: !filtersExpanded)
     }
-    
-    @objc func disconnectButtonClicked(sender: UIButton) {
-        let peripheral = connectedPeripheralArray[sender.tag]
-        centralManager.cancel(peripheral)
-    }
-    
-    @objc func viewButtonClicked(sender: UIButton) {
-        let peripheral = connectedPeripheralArray[sender.tag]
-        self.showServiceList(peripheral)
-    }
-    
-    func showServiceList(_ peripheral: BZPeripheral?) {
-        if let peripheral = peripheral {
-            let vc = BZOperationViewController()
-            vc.peripheral = peripheral
-            navigationController?.pushViewController(vc, animated: true)
+
+    @objc private func scanButtonTapped() {
+        view.endEditing(true)
+        if isScanning {
+            stopScan()
+        } else {
+            startScan()
         }
     }
-    
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 3  // Connected, Connecting, Scanned
+
+    private func startScan() {
+        refreshUUIDHint()
+        devices.removeAll { $0.state == .scanned }
+        isScanning = true
+        DemoStyle.applyFilled(scanButton, title: "Stop Scan", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        scanSpinner.startAnimating()
+        refreshList()
+        let advertisements = central.scan(services: scanServiceUUIDs(), allowDuplicates: true)
+        scanTask = Task { @MainActor in
+            for await advertisement in advertisements {
+                self.upsert(advertisement)
+            }
+        }
+    }
+
+    private func stopScan() {
+        scanTask?.cancel()
+        scanTask = nil
+        central.stopScan()
+        isScanning = false
+        DemoStyle.applyFilled(scanButton, title: "Start Scan", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        scanSpinner.stopAnimating()
+        refreshList()
+    }
+
+    private func scanServiceUUIDs() -> [CBUUID] {
+        DemoScanRules.serviceUUIDs(from: uuidField.text ?? "")
+    }
+
+    private func refillConnectedDevices() {
+        guard central.isPoweredOn else { return }
+        let connected = central.retrieveConnectedPeripherals(services: scanServiceUUIDs())
+        var changed = false
+        for peripheral in connected where peripheral.isConnected {
+            if let existing = devices.first(where: { $0.identifier == peripheral.uuidString }) {
+                if existing.state != .connected {
+                    existing.state = .connected
+                    changed = true
+                }
+            } else {
+                let device = DemoDevice(peripheral: peripheral, displayName: peripheral.name ?? "Unknown")
+                device.state = .connected
+                devices.insert(device, at: 0)
+                changed = true
+            }
+        }
+        if changed {
+            refreshList()
+        }
+    }
+
+    private func upsert(_ advertisement: BLEAdvertisement) {
+        let peripheral = advertisement.peripheral
+        let identifier = peripheral.uuidString
+        let incomingName = preferredName(advertisement)
+        if let row = devices.firstIndex(where: { $0.identifier == identifier }) {
+            let existing = devices[row]
+            if incomingName != "Unknown" {
+                existing.displayName = incomingName
+            }
+            existing.advertisementData = advertisement.advertisementData
+            existing.peripheral.rssi = advertisement.rssi ?? existing.peripheral.rssi
+            if existing.state == .scanned,
+               !DemoScanRules.passesFilters(
+                   name: existing.displayName,
+                   identifier: existing.identifier,
+                   nameFilter: nameField.text ?? "",
+                   identifierFilter: identifierField.text ?? ""
+               ) {
+                devices.remove(at: row)
+                refreshList()
+                return
+            }
+            tableView.reloadRows(at: [IndexPath(row: row, section: 0)], with: .none)
+            return
+        }
+        guard DemoScanRules.passesFilters(name: incomingName, identifier: identifier, nameFilter: nameField.text ?? "", identifierFilter: identifierField.text ?? "") else { return }
+        peripheral.rssi = advertisement.rssi
+        devices.append(DemoDevice(peripheral: peripheral, displayName: incomingName, advertisementData: advertisement.advertisementData))
+        refreshList()
+    }
+
+    private func preferredName(_ advertisement: BLEAdvertisement) -> String {
+        if let localName = advertisement.advertisementData[CBAdvertisementDataLocalNameKey] as? String, !localName.isEmpty {
+            return localName
+        }
+        if let name = advertisement.peripheral.name, !name.isEmpty {
+            return name
+        }
+        return "Unknown"
+    }
+
+    @objc private func sortDevices() {
+        devices.sort { ($0.peripheral.rssi?.intValue ?? Int.min) > ($1.peripheral.rssi?.intValue ?? Int.min) }
+        refreshList()
+    }
+
+    private func connect(_ device: DemoDevice) {
+        guard device.state == .scanned else { return }
+        device.state = .connecting
+        refreshList()
+        stopScan()
+        refreshList()
+        Task { @MainActor in
+            do {
+                try await self.central.connect(device.peripheral)
+                try await device.peripheral.discoverServices()
+                device.state = .connected
+            } catch {
+                device.state = .scanned
+                DemoFeedback.show(message: "Connection failed: \(error.localizedDescription)", in: self.view)
+            }
+            self.refreshList()
+        }
+    }
+
+    private func disconnect(_ device: DemoDevice) {
+        guard device.state == .connected else { return }
+        Task { @MainActor in
+            await self.central.disconnect(device.peripheral)
+            device.state = .scanned
+            self.refreshList()
+        }
+    }
+
+    private func enter(_ device: DemoDevice) {
+        guard device.state == .connected, device.peripheral.isConnected else { return }
+        let controller = BZOperationViewController()
+        controller.peripheral = device.peripheral
+        controller.deviceName = device.displayName
+        controller.advertisementData = device.advertisementData
+        navigationController?.pushViewController(controller, animated: true)
+    }
+
+    @objc private func deviceDisconnected(_ notification: Notification) {
+        guard let identifier = notification.object as? String,
+              let device = devices.first(where: { $0.identifier == identifier }) else {
+            return
+        }
+        if device.state == .connected {
+            device.state = .scanned
+            refreshList()
+            DemoFeedback.show(message: "Device disconnected", in: view)
+        }
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch section {
-        case 0: return connectedPeripheralArray.count
-        case 1: return connectingPeripheralArray.count
-        case 2: return scannedPeripheralArray.count
-        default: return 0
-        }
-    }
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 65
-    }
-    
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch section {
-        case 0: return "Connected Device"
-        case 1: return "Connecting Device"
-        case 2: return "Scanned Device"
-        default: return nil
-        }
+        devices.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellId) as! BZPeripheralCell
-
-        switch indexPath.section {
-        case 0: // Connected
-            let peripheral = connectedPeripheralArray[indexPath.row]
-            cell.peripheral = peripheral
-            cell.cellState = .connected
-            cell.funcButton.tag = indexPath.row
-            cell.funcButton.removeTarget(nil, action: nil, for: .touchUpInside)
-            cell.funcButton.addTarget(self, action: #selector(viewButtonClicked(sender:)), for: .touchUpInside)
-            cell.disconnectButton.tag = indexPath.row
-            cell.disconnectButton.removeTarget(nil, action: nil, for: .touchUpInside)
-            cell.disconnectButton.addTarget(self, action: #selector(disconnectButtonClicked(sender:)), for: .touchUpInside)
-
-        case 1: // Connecting
-            let peripheral = connectingPeripheralArray[indexPath.row]
-            cell.peripheral = peripheral
-            cell.cellState = .connecting
-
-        case 2: // Scanned
-            let peripheral = scannedPeripheralArray[indexPath.row]
-            cell.peripheral = peripheral
-            cell.cellState = .scanned
-            cell.funcButton.tag = indexPath.row
-            cell.funcButton.removeTarget(nil, action: nil, for: .touchUpInside)
-            cell.funcButton.addTarget(self, action: #selector(connectButtonClicked(sender:)), for: .touchUpInside)
-
-        default:
-            break
-        }
-
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! DemoDeviceCell
+        let device = devices[indexPath.row]
+        cell.update(device)
+        cell.onConnect = { [weak self] in self?.connect(device) }
+        cell.onDisconnect = { [weak self] in self?.disconnect(device) }
+        cell.onEnter = { [weak self] in self?.enter(device) }
         return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        if self.tableView == tableView {
-            if indexPath.section == 0 {
-                let device = connectedPeripheralArray[indexPath.row]
-                
-            } else if indexPath.section == 1 {
-                let device = scannedPeripheralArray[indexPath.row]
-            }
-        }
-    }
-    
-    func createHeaderView() -> UIView {
-        let lightGreen = UIUtils.color(red: 48, green: 206, blue: 170, alpha: 1.0)
-        let deepGreen = UIUtils.color(red: 43, green: 186, blue: 152, alpha: 1.0)
-        let headerView = UIUtils.getTableViewHeaderView(height: 112, bgColor: .white)
-        
-        let contentView = UIView()
-        contentView.backgroundColor = .white
-        contentView.layer.cornerRadius = 8
-        headerView.addSubview(contentView)
-        contentView.snp.makeConstraints { (make) in
-            make.width.equalTo(UIUtils.screenWidth() - 40)
-            make.centerX.equalToSuperview()
-            make.topMargin.equalTo(10)
-            make.bottomMargin.equalToSuperview()
-        }
-        
-        let reScanBtn = UIButton()
-        reScanBtn.setTitle(NSLocalizedString("ReScan", comment: ""), for: .normal)
-        reScanBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        reScanBtn.setTitleColor(lightGreen, for: .normal)
-        reScanBtn.setTitleColor(deepGreen, for: .highlighted)
-        reScanBtn.titleLabel?.minimumScaleFactor = 0.5
-        reScanBtn.titleLabel?.adjustsFontSizeToFitWidth = true
-        reScanBtn.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 0.3)), for: .normal)
-        reScanBtn.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 0.08)), for: .highlighted)
-        reScanBtn.clipsToBounds = true
-        reScanBtn.layer.cornerRadius = 18
-        reScanBtn.layer.borderWidth = 1
-        reScanBtn.layer.borderColor = lightGreen.cgColor
-        reScanBtn.addTarget(self, action: .headerBtnAction, for: .touchUpInside)
-        reScanBtn.tag = BTN_TAG_RESCAN
-        contentView.addSubview(reScanBtn)
-        reScanBtn.snp.makeConstraints { (make) in
-            make.width.equalTo(100)
-            make.height.equalTo(36)
-            make.leftMargin.equalTo(20)
-            make.topMargin.equalTo(10)
-        }
-        
-        let retrieveBtn = UIButton()
-        retrieveBtn.setTitle(NSLocalizedString("Retrieve", comment: ""), for: .normal)
-        retrieveBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        retrieveBtn.setTitleColor(lightGreen, for: .normal)
-        retrieveBtn.setTitleColor(deepGreen, for: .highlighted)
-        retrieveBtn.titleLabel?.minimumScaleFactor = 0.5
-        retrieveBtn.titleLabel?.adjustsFontSizeToFitWidth = true
-        retrieveBtn.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 0.3)), for: .normal)
-        retrieveBtn.setBackgroundImage(UIUtils.createImageWithColor(UIUtils.color(red: 255, green: 255, blue: 255, alpha: 0.08)), for: .highlighted)
-        retrieveBtn.clipsToBounds = true
-        retrieveBtn.layer.cornerRadius = 18
-        retrieveBtn.layer.borderWidth = 1
-        retrieveBtn.layer.borderColor = lightGreen.cgColor
-        retrieveBtn.addTarget(self, action: .headerBtnAction, for: .touchUpInside)
-        retrieveBtn.tag = BTN_TAG_RETRIEVE
-        contentView.addSubview(retrieveBtn)
-        retrieveBtn.snp.makeConstraints { (make) in
-            make.width.equalTo(100)
-            make.height.equalTo(36)
-            make.leftMargin.equalTo(20)
-            make.topMargin.equalTo(56)
-        }
-        return headerView
     }
 }

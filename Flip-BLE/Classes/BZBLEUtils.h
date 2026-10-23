@@ -10,6 +10,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface BZBLEUtils : NSObject
 
 @end
@@ -23,8 +25,10 @@
 @interface NSMutableDictionary (BZ)
 
 - (BOOL)BZ_isValidForKey:(NSString *)key;
-- (void)BZ_setObject:(id)anObject forKey:(id)aKey;
+- (void)BZ_setObject:(nullable id)anObject forKey:(id)aKey;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZBLEUtils_h */

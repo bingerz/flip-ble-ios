@@ -1,0 +1,15 @@
+## Learned User Preferences
+
+- Keep the BLE core in Objective-C and improve the Swift call surface (nullability, properties, and a Swift facade) instead of rewriting the implementation. Use the pure Swift Example app as the acceptance surface.
+- Match the iOS Example to the Android flip-ble demo's main path: scan, connect, services, characteristics, properties, and the operation console. Do not port Android-only extras such as protocol tests, stress tests, hidden AutoConnect, bonded-device logs, the location prompt, or requesting MTU 23 after connect.
+- Demo-only UI work stays in the Example. Keep those screens easy to scan and visually finished: empty states, in-page errors, readable long UUIDs, and controls that do not cover text. If a screenshot still looks unfinished, iterate the layout and copy again. Leave SDK behavior, including write type, unchanged in those passes.
+- Cover new logic with simulator-runnable tests. Leave live connect, discover, read, write, and notify out of those tests; the simulator has no BLE radio and those calls hang or fail.
+
+## Learned Workspace Facts
+
+- Flip-BLE is the BLE SDK split out of `/Users/hanson/myWork/iOS/nut` for that app's Swift migration. The Android counterpart demo is `/Users/hanson/myWork/android/flip-ble`.
+- The CocoaPods pod is `Flip-BLE` (module `Flip_BLE`), deployment target iOS 12.0, Swift 5.5. The core stays Objective-C (`BZCentralManager`, `BZPeripheral`, `BZPeripheralController`). Swift entry points are `BLECentral`, `BLEPeripheral`, and `BLEError`. `BZPeripheral+Internal.h`, `BZPeripheralController+Internal.h`, and `BZBLEUtils.h` are private headers.
+- The Example app is pure Swift with no bridging header, deployment target iOS 15, Swift 5.5. It must use the UIScene lifecycle (`SceneDelegate`); builds against the current SDK crash at launch without it. Screens import `Flip_BLE` and follow the system appearance with semantic colors and dynamic type.
+- With an empty or fully invalid service-UUID filter, the Example scans `1803`, `0900`, `FD44`, `FE2C`, and `FEAA` and shows that fallback. Mixed input keeps the valid UUIDs. Scan starts and stops only from the user. One row per identifier; later advertisements update the name, RSSI, and the saved advertisement summary. Editing the name or identifier filter drops non-matching scanned rows and keeps connecting or connected rows. Disconnecting from a nested device page returns to the scan list.
+- Scan filtering, UUID parsing, hex logs, advertisement summaries, GATT property splitting, the console log cache (`DemoConsoleStore`), and Example styling live in `Example/Flip-BLE/DemoSupport.swift`. Simulator tests are `Example/Tests/DemoLogicTests.swift`, `BLEFacadeTests.swift`, and `Tests.swift`.
+- Example Write and Write Without Response both call `BLEPeripheral.write`. `BZPeripheralController` uses with-response when the characteristic has `CBCharacteristicPropertyWrite`, and without-response only when that bit is absent. The Swift facade has no write-type parameter.

@@ -12,6 +12,10 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "BZConnectStateDelegate.h"
 
+@class BZPeripheral;
+
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NS_ENUM(NSInteger, BZPeripheralState) {
     BZPeripheralStateDisconnected = 0,
     BZPeripheralStateConnecting,
@@ -21,48 +25,31 @@ typedef NS_ENUM(NSInteger, BZPeripheralState) {
     BZPeripheralStateDisconnecting
 };
 
-typedef void (^DiscoverCallback)(BZPeripheral *peripheral, NSError *error);
-typedef void (^DiscoverServiceCallback)(BZPeripheral *peripheral, NSError *error);
-typedef void (^DiscoverCharactCallback)(CBService *service, NSError *error);
-typedef void (^RSSICallback)(NSNumber *value, NSError *error);
-typedef void (^ReadCallback)(CBCharacteristic *charact, NSError * error);
-typedef void (^WriteCallback)(CBCharacteristic *charact, NSError * error);
-typedef void (^NotifyCallback)(CBCharacteristic *charact, NSError * error);
-typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
+typedef void (^DiscoverCallback)(BZPeripheral * _Nullable peripheral, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.DiscoverHandler);
+typedef void (^DiscoverServiceCallback)(BZPeripheral * _Nullable peripheral, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.DiscoverServiceHandler);
+typedef void (^DiscoverCharactCallback)(CBService * _Nullable service, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.DiscoverCharacteristicHandler);
+typedef void (^RSSICallback)(NSNumber * _Nullable value, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.RSSIHandler);
+typedef void (^ReadCallback)(CBCharacteristic * _Nullable characteristic, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.ReadHandler);
+typedef void (^WriteCallback)(CBCharacteristic * _Nullable characteristic, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.WriteHandler);
+typedef void (^NotifyCallback)(CBCharacteristic * _Nullable characteristic, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.NotifyHandler);
+typedef void (^IndicateCallback)(CBCharacteristic * _Nullable characteristic, NSError * _Nullable error) NS_SWIFT_NAME(BZPeripheral.IndicateHandler);
 
 @interface BZPeripheral : NSObject <CBPeripheralDelegate>
 
-/*!
- *  @property delegate
- *
- *  @discussion The delegate object that will receive peripheral connection state events.
- */
-@property (nonatomic, retain) id<BZConnectStateDelegate> connectStateDelegate;
+@property (nonatomic, retain, nullable) id<BZConnectStateDelegate> connectStateDelegate;
 
-@property (nonatomic, strong, readwrite) NSNumber *scannedRSSINumber;
+@property (nonatomic, strong, nullable) NSNumber *scannedRSSINumber;
 
-- (id)initWithPeripheral:(CBPeripheral *)blePeripheral;
+- (instancetype)initWithPeripheral:(CBPeripheral *)blePeripheral;
 
-- (NSMutableArray *)discoverBlocks;
-- (NSMutableArray *)serviceBlocks;
-- (NSMutableDictionary *)charactBlocks;
-- (NSMutableArray *)rssiBlocks;
-- (NSMutableDictionary *)readBlocks;
-- (NSMutableDictionary *)writBlocks;
-- (NSMutableDictionary *)notifyStateBlocks;
-- (NSMutableDictionary *)notifyValueBlocks;
-- (NSMutableDictionary *)indicateStateBlocks;
-- (NSMutableDictionary *)indicateValueBlocks;
+@property (nonatomic, readonly, nullable) CBPeripheral *blePeripheral;
+@property (nonatomic, readonly) NSString *bleState;
+@property (nonatomic, readonly, nullable) NSString *name;
+@property (nonatomic, readonly, nullable) NSString *UUIDString;
+@property (nonatomic, readonly, nullable) NSArray<CBService *> *services;
+@property (nonatomic, readonly, getter=isConnecting) BOOL connecting;
+@property (nonatomic, readonly, getter=isConnected) BOOL connected;
 
-- (void)cleanCallbacks;
-
-- (CBPeripheral *)blePeripheral;
-- (NSString *)bleState;
-- (NSString *)name;
-- (NSString *)UUIDString;
-- (NSArray *)services;
-- (BOOL)isConnecting;
-- (BOOL)isConnected;
 - (void)updateBLEPeripheral:(CBPeripheral *)peripheral;
 - (void)updateStateWithBLEPeripheral:(CBPeripheral *)blePeripheral;
 
@@ -70,8 +57,8 @@ typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 - (BOOL)disconnect;
 
 - (BOOL)discoverServices:(DiscoverCallback)callback;
-- (BOOL)discoverService:(NSArray *)serviceUUIDs callback:(DiscoverServiceCallback)callback;
-- (BOOL)discoverCharact:(NSArray *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback;
+- (BOOL)discoverService:(nullable NSArray<CBUUID *> *)serviceUUIDs callback:(DiscoverServiceCallback)callback;
+- (BOOL)discoverCharact:(nullable NSArray<CBUUID *> *)charactUUIDs forService:(CBService *)service callback:(DiscoverCharactCallback)callback;
 
 - (BOOL)isContainCharactWithUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID;
 - (BOOL)isContainCharactWithString:(NSString *)serviceUUIDString charact:(NSString *)charactUUIDString;
@@ -84,7 +71,7 @@ typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 
 - (BOOL)readWithUUIDString:(NSString *)service charactUUID:(NSString *)read callback:(ReadCallback)callback;
 
-- (BOOL)writeWithCharact:(CBCharacteristic *)write  value:(NSData *)value callback:(ReadCallback)callback;
+- (BOOL)writeWithCharact:(CBCharacteristic *)write value:(NSData *)value callback:(WriteCallback)callback;
 
 - (BOOL)writeWithUUID:(CBUUID *)service charactUUID:(CBUUID *)write value:(NSData *)value callback:(WriteCallback)callback;
 
@@ -103,5 +90,7 @@ typedef void (^IndicateCallback)(CBCharacteristic *charact, NSError * error);
 - (BOOL)setIndicateWithUUIDString:(NSString *)service charactUUID:(NSString *)notify enable:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZPeripheral_h */

@@ -11,13 +11,10 @@
 #import <Foundation/Foundation.h>
 #import "BZPeripheral.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface BZMultiplePeripheralController : NSObject
 
-/**
- *  Singleton method
- *
- *  @return the shared instance with OS_LOG_DEFAULT.
- */
 @property (class, readonly) BZMultiplePeripheralController *sharedInstance;
 
 - (void)addPeripheral:(BZPeripheral *)peripheral;
@@ -26,12 +23,14 @@
 
 - (void)removeAllPeripheral;
 
-- (BZPeripheral *)getPeripheral:(NSString *)key;
+- (nullable BZPeripheral *)getPeripheral:(NSString *)key;
 
 - (void)disconnectAllPeripheral;
 
-- (NSArray *)getPeripherals;
+- (NSArray<BZPeripheral *> *)getPeripherals;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZMultiplePeripheralController_h */

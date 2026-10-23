@@ -10,6 +10,7 @@
 #import "BZBLEUtils.h"
 #import "CBObject+BZAddition.h"
 #import "BZCentralManager.h"
+#import "BZPeripheral+Internal.h"
 #import "BZMultiplePeripheralController.h"
 
 @interface BZCentralManager () <CBCentralManagerDelegate> {

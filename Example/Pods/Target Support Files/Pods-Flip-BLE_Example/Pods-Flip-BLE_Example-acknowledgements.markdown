@@ -3,7 +3,7 @@ This application makes use of the following third party libraries:
 
 ## Flip-BLE
 
-Copyright (c) 2022 hanbing0604@aliyun.com <hanbing0604@aliyun.com>
+Copyright (c) 2022 Bingerz <hanbing0604@aliyun.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

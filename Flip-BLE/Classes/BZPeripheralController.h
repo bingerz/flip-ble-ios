@@ -12,23 +12,15 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "BZPeripheral.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface BZPeripheralController : NSObject
 
-- (id)initWithPeripheral:(BZPeripheral *)peripheral;
+- (instancetype)initWithPeripheral:(BZPeripheral *)peripheral;
 
-- (id)withCharact:(CBCharacteristic *)characteristic;
+- (nullable instancetype)withCharact:(CBCharacteristic *)characteristic;
 
-- (id)withUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID;
-
-- (void)handleReadCallback:(CBCharacteristic *)charact error:(NSError *)error;
-
-- (void)handleNotifyStateCallback:(CBCharacteristic *)charact error:(NSError *)error;
-
-- (void)handleNotifyValueCallback:(CBCharacteristic *)charact error:(NSError *)error;
-
-- (void)handleIndicateStateCallback:(CBCharacteristic *)charact error:(NSError *)error;
-
-- (void)handleIndicateValueCallback:(CBCharacteristic *)charact error:(NSError *)error;
+- (nullable instancetype)withUUID:(CBUUID *)serviceUUID charact:(CBUUID *)charactUUID;
 
 - (BOOL)readCharact:(ReadCallback)callback;
 
@@ -39,5 +31,7 @@
 - (BOOL)indicateCharact:(BOOL)enable stateCallback:(IndicateCallback)stateCallback valueCallback:(IndicateCallback)valueCallback;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* BZPeripheralController_h */

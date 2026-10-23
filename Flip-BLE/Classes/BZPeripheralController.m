@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "BZBLEError.h"
 #import "BZPeripheralController.h"
+#import "BZPeripheral+Internal.h"
 
 @interface BZPeripheralController ()
 

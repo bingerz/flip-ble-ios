@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Flip-BLE'
-  s.version          = '0.4.1'
+  s.version          = '0.5.1'
   s.summary          = 'An easy-to-use Bluetooth development framework for the iOS platform.'
 
 # This description is used to generate tags and improve search results.
@@ -31,8 +31,27 @@ Pod::Spec.new do |s|
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '12.0'
+  s.swift_version = '5.5'
+  s.frameworks = 'CoreBluetooth'
 
   s.source_files = 'Flip-BLE/Classes/**/*'
+  s.public_header_files = [
+    'Flip-BLE/Classes/BZCentralManager.h',
+    'Flip-BLE/Classes/BZCentralStateDelegate.h',
+    'Flip-BLE/Classes/BZConnectStateDelegate.h',
+    'Flip-BLE/Classes/BZScanDelegate.h',
+    'Flip-BLE/Classes/BZPeripheral.h',
+    'Flip-BLE/Classes/BZPeripheralController.h',
+    'Flip-BLE/Classes/BZMultiplePeripheralController.h',
+    'Flip-BLE/Classes/BZBLEError.h',
+    'Flip-BLE/Classes/CBObject+BZAddition.h',
+    'Flip-BLE/Classes/Flip_BLE.h'
+  ]
+  s.private_header_files = [
+    'Flip-BLE/Classes/BZPeripheral+Internal.h',
+    'Flip-BLE/Classes/BZPeripheralController+Internal.h',
+    'Flip-BLE/Classes/BZBLEUtils.h'
+  ]
   
   s.requires_arc = true
   
