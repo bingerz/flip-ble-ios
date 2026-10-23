@@ -101,10 +101,13 @@ remote_tag_commit() {
 
 version_on_cdn() {
   local version="$1"
-  local shard url
+  local shard url body
   shard="$(md5 -q -s "Flip-BLE")"
   url="https://cdn.cocoapods.org/Specs/${shard:0:1}/${shard:1:1}/${shard:2:1}/Flip-BLE/${version}/Flip-BLE.podspec.json"
-  curl -fsS -A "CocoaPods" -o /dev/null "$url" 2>/dev/null
+  # cdn.cocoapods.org returns 301 for every path, including versions that do not exist.
+  # Follow it and require the spec JSON itself.
+  body="$(curl -fsSL -A "CocoaPods" "$url" 2>/dev/null)" || return 1
+  printf '%s' "$body" | grep -F -q "\"version\": \"${version}\""
 }
 
 write_archive() {
