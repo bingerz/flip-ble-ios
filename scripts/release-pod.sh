@@ -41,26 +41,37 @@ pod_field() {
 
 require_clean_tree() {
   local dirty
-  dirty="$(git status --porcelain)"
+  # The archive and this script are not what trunk builds. Trunk reads the tagged root podspec.
+  dirty="$(git status --porcelain --untracked-files=all | grep -Ev '^\?\? Flip-BLE/[0-9]+\.[0-9]+\.[0-9]+/|^.. scripts/release-pod\.sh$' || true)"
   if [[ -n "$dirty" ]]; then
     echo "工作区还有未提交的改动。trunk 会按 git tag 取源码，tag 必须和根目录 podspec 是同一次提交。" >&2
     echo "先提交 s.version，再运行本脚本。" >&2
-    git status -sb >&2
+    printf '%s\n' "$dirty" >&2
     exit 1
   fi
 }
 
 resolve_pod() {
-  if pod --version >/dev/null 2>&1; then
-    POD=(pod)
+  local pod_bin
+  # pod --version does not load ffi. trunk push updates the CDN through typhoeus,
+  # and this machine's ffi 1.15.5 bundle is x86_64-only. Choose the architecture
+  # from ffi alone; do not let a pod --version failure hide a working interpreter.
+  pod_bin="$(command -v pod || true)"
+  if [[ -z "$pod_bin" ]]; then
+    echo "找不到 pod 可执行文件。" >&2
+    exit 1
+  fi
+  if /usr/bin/ruby -e 'require "ffi"' >/dev/null 2>&1; then
+    POD=("$pod_bin")
     return
   fi
-  if arch -x86_64 pod --version >/dev/null 2>&1; then
-    echo "当前系统 Ruby 的 pod 只能在 x86_64 下运行，后续命令会加上 arch -x86_64。"
-    POD=(arch -x86_64 pod)
+  if /usr/bin/arch -x86_64 /usr/bin/ruby -e 'require "ffi"' >/dev/null 2>&1; then
+    echo "当前系统 Ruby 的 ffi 只能在 x86_64 下加载，后续 pod 命令会加上 arch -x86_64。"
+    POD=(/usr/bin/arch -x86_64 "$pod_bin")
     return
   fi
-  echo "找不到可用的 pod。系统 Ruby 的 ffi 若已损坏，不要再 gem pristine ffi。" >&2
+  echo "系统 Ruby 无法加载 ffi。不要运行 gem pristine ffi。" >&2
+  /usr/bin/arch -x86_64 /usr/bin/ruby -e 'require "ffi"' >&2 || true
   exit 1
 }
 
@@ -87,8 +98,10 @@ tag_commit() {
 
 remote_tag_commit() {
   local name="$1"
-  local lines peeled plain
-  lines="$(git ls-remote origin "refs/tags/${name}")"
+  local lines peeled plain object
+  # refs/tags/name alone does not include refs/tags/name^{}. An annotated tag then
+  # looks like a different commit, and the script stops before trunk push.
+  lines="$(git ls-remote origin "refs/tags/${name}" "refs/tags/${name}^{}")"
   [[ -n "$lines" ]] || return 0
   peeled="$(printf '%s\n' "$lines" | awk '/\^\{\}$/ { print $1; exit }')"
   if [[ -n "$peeled" ]]; then
@@ -96,6 +109,13 @@ remote_tag_commit() {
     return
   fi
   plain="$(printf '%s\n' "$lines" | awk 'NR == 1 { print $1 }')"
+  if git rev-parse -q --verify "refs/tags/${name}" >/dev/null; then
+    object="$(git rev-parse "refs/tags/${name}")"
+    if [[ "$plain" == "$object" ]]; then
+      git rev-parse "${name}^{commit}"
+      return
+    fi
+  fi
   printf '%s\n' "$plain"
 }
 
@@ -201,7 +221,17 @@ fi
 
 echo "发布到 CocoaPods trunk..."
 if ! "${POD[@]}" trunk push "$PODSPEC" --allow-warnings; then
-  if version_on_cdn "$VERSION"; then
+  # A GitHub API timeout can happen after trunk has already accepted the spec.
+  published=0
+  for _ in 1 2 3 4; do
+    if version_on_cdn "$VERSION"; then
+      published=1
+      break
+    fi
+    echo "CDN 上暂时还没有 Flip-BLE ${VERSION}，5 秒后再查。"
+    sleep 5
+  done
+  if [[ "$published" -eq 1 ]]; then
     echo "trunk 命令返回了错误，但 CDN 上已经能读到 Flip-BLE ${VERSION}。按已发布处理，不要重复 push。"
   else
     echo "trunk push 失败，CDN 上也还没有 Flip-BLE ${VERSION}。" >&2
