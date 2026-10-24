@@ -253,6 +253,9 @@ final class DemoConsoleStore {
 
 extension Notification.Name {
     static let demoPeripheralDisconnected = Notification.Name("demoPeripheralDisconnected")
+    /// Posted by the stress screen so the scan list drops its watch without disconnecting.
+    /// The object is the peripheral identifier.
+    static let demoStressReleaseDevice = Notification.Name("demoStressReleaseDevice")
 }
 
 final class DemoConnectionWatch {

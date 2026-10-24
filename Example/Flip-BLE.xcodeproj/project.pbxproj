@@ -31,6 +31,10 @@
 		C0TEST0228B0BA4800ACA349 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0TEST0128B0BA4800ACA349 /* Tests.swift */; };
 		C0TEST0428B0BA4800ACA34A /* DemoLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0TEST0328B0BA4800ACA34A /* DemoLogicTests.swift */; };
 		C0TEST0628B0BA4800ACA34B /* BLEFacadeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0TEST0528B0BA4800ACA34B /* BLEFacadeTests.swift */; };
+		C0TEST0828B0BA4800ACA34C /* BLEStabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0TEST0728B0BA4800ACA34C /* BLEStabilityTests.swift */; };
+		C0TEST0A28B0BA4800ACA34D /* DemoStressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0TEST0928B0BA4800ACA34D /* DemoStressTests.swift */; };
+		C0STRS0228B0BA4800ACA353 /* DemoStressTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0STRS0128B0BA4800ACA353 /* DemoStressTest.swift */; };
+		C0STRS0428B0BA4800ACA354 /* BZStressTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0STRS0328B0BA4800ACA354 /* BZStressTestViewController.swift */; };
 		FD16191717444B1414CDF12A /* Pods_Flip_BLE_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3E4CFF901C2E9EE80FD14F0 /* Pods_Flip_BLE_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +84,10 @@
 		C0TEST0128B0BA4800ACA349 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		C0TEST0328B0BA4800ACA34A /* DemoLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoLogicTests.swift; sourceTree = "<group>"; };
 		C0TEST0528B0BA4800ACA34B /* BLEFacadeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEFacadeTests.swift; sourceTree = "<group>"; };
+		C0TEST0728B0BA4800ACA34C /* BLEStabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEStabilityTests.swift; sourceTree = "<group>"; };
+		C0TEST0928B0BA4800ACA34D /* DemoStressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStressTests.swift; sourceTree = "<group>"; };
+		C0STRS0128B0BA4800ACA353 /* DemoStressTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStressTest.swift; sourceTree = "<group>"; };
+		C0STRS0328B0BA4800ACA354 /* BZStressTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BZStressTestViewController.swift; sourceTree = "<group>"; };
 		D4A9A3FED98BBF21CE2B6CB3 /* Pods-Flip-BLE_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Flip-BLE_Example.debug.xcconfig"; path = "Target Support Files/Pods-Flip-BLE_Example/Pods-Flip-BLE_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		E2DF0DD46D1677E9DAB4D31B /* Flip-BLE.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = "Flip-BLE.podspec"; path = "../Flip-BLE.podspec"; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 /* End PBXFileReference section */
@@ -157,6 +165,8 @@
 				C0PROP0128B0BA4800ACA350 /* BZPropertyListViewController.swift */,
 				C0CONS0128B0BA4800ACA351 /* BZConsoleViewController.swift */,
 				C0DEMO0128B0BA4800ACA352 /* DemoSupport.swift */,
+				C0STRS0128B0BA4800ACA353 /* DemoStressTest.swift */,
+				C0STRS0328B0BA4800ACA354 /* BZStressTestViewController.swift */,
 				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
 				6003F5A8195388D20070C39A /* Images.xcassets */,
@@ -182,6 +192,8 @@
 				C0TEST0128B0BA4800ACA349 /* Tests.swift */,
 				C0TEST0328B0BA4800ACA34A /* DemoLogicTests.swift */,
 				C0TEST0528B0BA4800ACA34B /* BLEFacadeTests.swift */,
+				C0TEST0728B0BA4800ACA34C /* BLEStabilityTests.swift */,
+				C0TEST0928B0BA4800ACA34D /* DemoStressTests.swift */,
 				6003F5B6195388D20070C39A /* Supporting Files */,
 			);
 			path = Tests;
@@ -420,6 +432,8 @@
 				C0PROP0228B0BA4800ACA350 /* BZPropertyListViewController.swift in Sources */,
 				C0CONS0228B0BA4800ACA351 /* BZConsoleViewController.swift in Sources */,
 				C0DEMO0228B0BA4800ACA352 /* DemoSupport.swift in Sources */,
+				C0STRS0228B0BA4800ACA353 /* DemoStressTest.swift in Sources */,
+				C0STRS0428B0BA4800ACA354 /* BZStressTestViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +444,8 @@
 				C0TEST0228B0BA4800ACA349 /* Tests.swift in Sources */,
 				C0TEST0428B0BA4800ACA34A /* DemoLogicTests.swift in Sources */,
 				C0TEST0628B0BA4800ACA34B /* BLEFacadeTests.swift in Sources */,
+				C0TEST0828B0BA4800ACA34C /* BLEStabilityTests.swift in Sources */,
+				C0TEST0A28B0BA4800ACA34D /* DemoStressTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

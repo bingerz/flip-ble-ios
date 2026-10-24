@@ -22,6 +22,14 @@ public struct BLEAdvertisement {
     public var isConnectable: Bool {
         (advertisementData[CBAdvertisementDataIsConnectable] as? NSNumber)?.boolValue ?? false
     }
+
+    public var serviceData: [CBUUID: Data] {
+        advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] ?? [:]
+    }
+
+    public var solicitedServiceUUIDs: [CBUUID] {
+        advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey] as? [CBUUID] ?? []
+    }
 }
 
 @available(iOS 13.0, *)
@@ -56,25 +64,30 @@ public final class BLECentral: NSObject {
         bridge.owner = self
     }
 
-    public func start(restoreIdentifier: String?, showPowerAlert: Bool) {
-        manager.centralStateDelegate = bridge
-        manager.scanDelegate = bridge
+    @discardableResult
+    public func start(restoreIdentifier: String?, showPowerAlert: Bool) -> Bool {
+        guard claimRadio() else { return false }
         manager.startCentral(withRestoreIdKey: restoreIdentifier, showPowerAlert: showPowerAlert)
+        return true
     }
 
-    public func destroy() {
+    @discardableResult
+    public func destroy() -> Bool {
+        guard ownsRadio() else { return false }
         stopScan()
         finishConnections()
         manager.destroyCentral()
+        return true
     }
 
-    public func restart(restoreIdentifier: String?, showPowerAlert: Bool) {
+    @discardableResult
+    public func restart(restoreIdentifier: String?, showPowerAlert: Bool) -> Bool {
+        guard claimRadio() else { return false }
         lock.lock()
         wrappers.removeAll()
         lock.unlock()
-        manager.centralStateDelegate = bridge
-        manager.scanDelegate = bridge
         manager.restartCentral(withRestoreIdKey: restoreIdentifier, showPowerAlert: showPowerAlert)
+        return true
     }
 
     public var isPoweredOn: Bool {
@@ -97,10 +110,12 @@ public final class BLECentral: NSObject {
         stream(into: \.connectionContinuations)
     }
 
-    public func scan(services: [CBUUID], allowDuplicates: Bool = false) -> AsyncStream<BLEAdvertisement> {
+    public func scan(services: [CBUUID]?, allowDuplicates: Bool = false) -> AsyncStream<BLEAdvertisement> {
+        guard claimRadio() else {
+            return AsyncStream { $0.finish() }
+        }
         let advertisements = openScanStream()
         let generation = rememberScan(services: services, allowDuplicates: allowDuplicates)
-        manager.scanDelegate = bridge
         startPendingScan(generation)
         return advertisements
     }
@@ -110,7 +125,9 @@ public final class BLECentral: NSObject {
         scanGeneration &+= 1
         pendingScan = nil
         lock.unlock()
-        manager.stopScan()
+        if ownsRadio() {
+            manager.stopScan()
+        }
         finish(\.scanContinuations)
     }
 
@@ -129,7 +146,10 @@ public final class BLECentral: NSObject {
             }
             connectContinuations[id] = continuation
             lock.unlock()
-            track(peripheral)
+            guard track(peripheral) else {
+                resumeConnect(id, result: .failure(BLEError.invalidOperation("Peripheral delegate is already owned")))
+                return
+            }
             if !peripheral.peripheral.connect() {
                 resumeConnect(id, result: .failure(BLEError.invalidOperation("Connect did not start")))
             }
@@ -138,28 +158,30 @@ public final class BLECentral: NSObject {
 
     public func disconnect(_ peripheral: BLEPeripheral) async {
         guard peripheral.isConnected else { return }
+        guard claimConnect(peripheral.peripheral) else { return }
         await withCheckedContinuation { continuation in
             let id = key(for: peripheral.peripheral)
             lock.lock()
             disconnectContinuations[id] = continuation
             lock.unlock()
-            peripheral.peripheral.connectStateDelegate = bridge
             if !peripheral.peripheral.disconnect() {
                 resumeDisconnect(id)
             }
         }
     }
 
-    public func track(_ peripheral: BLEPeripheral) {
+    @discardableResult
+    public func track(_ peripheral: BLEPeripheral) -> Bool {
         let id = peripheral.uuidString
         if !id.isEmpty, let existing = manager.getPeripheral(id) {
-            existing.connectStateDelegate = bridge
+            guard claimConnect(existing) else { return false }
             remember(existing === peripheral.peripheral ? peripheral : BLEPeripheral(existing))
-            return
+            return true
         }
-        peripheral.peripheral.connectStateDelegate = bridge
+        guard claimConnect(peripheral.peripheral) else { return false }
         manager.add(peripheral.peripheral)
         remember(peripheral)
+        return true
     }
 
     public func untrack(_ peripheral: BLEPeripheral) {
@@ -187,7 +209,10 @@ public final class BLECentral: NSObject {
     }
 
     public func disconnectAll() {
-        BZMultiplePeripheralController.sharedInstance.disconnectAllPeripheral()
+        BZMultiplePeripheralController.sharedInstance.getPeripherals().forEach { peripheral in
+            guard owns(peripheral.connectStateDelegate) else { return }
+            peripheral.disconnect()
+        }
     }
 
     public func registerRetrieved(_ peripheral: BLEPeripheral) {
@@ -282,16 +307,10 @@ public final class BLECentral: NSObject {
         emit(.restored(wrap(peripheral)))
     }
 
+    /// Reports the restore without taking the per-device delegate.
+    /// A later `observeConnection()` has to be able to claim that slot.
     func centralDidRestore(_ peripheral: BZPeripheral) {
-        let wrapped = wrap(peripheral)
-        if let delegate = peripheral.connectStateDelegate as AnyObject? {
-            if delegate !== bridge {
-                emit(.restored(wrapped))
-            }
-        } else {
-            peripheral.connectStateDelegate = bridge
-            emit(.restored(wrapped))
-        }
+        emit(.restored(wrap(peripheral)))
     }
 
     private func stream<T>(into keyPath: ReferenceWritableKeyPath<BLECentral, [String: AsyncStream<T>.Continuation]>, initial: T? = nil) -> AsyncStream<T> {
@@ -329,7 +348,7 @@ public final class BLECentral: NSObject {
         continuations.forEach { $0.finish() }
     }
 
-    private func rememberScan(services: [CBUUID], allowDuplicates: Bool) -> UInt {
+    private func rememberScan(services: [CBUUID]?, allowDuplicates: Bool) -> UInt {
         lock.lock()
         scanGeneration &+= 1
         let generation = scanGeneration
@@ -349,6 +368,7 @@ public final class BLECentral: NSObject {
             let services = pending.services
             let allowDuplicates = pending.allowDuplicates
             self.lock.unlock()
+            guard self.ownsRadio() else { return }
             self.manager.scanDelegate = self.bridge
             self.manager.startScan(withServices: services, allowDup: allowDuplicates)
         }
@@ -380,12 +400,33 @@ public final class BLECentral: NSObject {
         continuation?.resume()
     }
 
+    private func owns(_ delegate: AnyObject?) -> Bool {
+        delegate == nil || delegate === bridge
+    }
+
+    private func ownsRadio() -> Bool {
+        owns(manager.centralStateDelegate) && owns(manager.scanDelegate)
+    }
+
+    private func claimRadio() -> Bool {
+        guard ownsRadio() else { return false }
+        manager.centralStateDelegate = bridge
+        manager.scanDelegate = bridge
+        return true
+    }
+
+    private func claimConnect(_ peripheral: BZPeripheral) -> Bool {
+        guard owns(peripheral.connectStateDelegate) else { return false }
+        peripheral.connectStateDelegate = bridge
+        return true
+    }
+
     private func register(_ peripheral: BLEPeripheral, connected: Bool) {
         guard !peripheral.uuidString.isEmpty else { return }
         if manager.getPeripheral(peripheral.uuidString) != nil {
             return
         }
-        track(peripheral)
+        guard track(peripheral) else { return }
         let wrapped = wrap(peripheral.peripheral)
         emit(connected ? .retrievedConnected(wrapped) : .retrieved(wrapped))
     }
@@ -471,7 +512,7 @@ final class BLECentralBridge: NSObject, BZScanDelegate, BZCentralStateDelegate, 
 }
 
 private struct PendingScan {
-    var services: [CBUUID]
+    var services: [CBUUID]?
     var allowDuplicates: Bool
 }
 

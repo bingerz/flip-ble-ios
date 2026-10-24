@@ -17,7 +17,7 @@ class BZConsoleViewController: UIViewController {
     private let busySpinner = UIActivityIndicatorView(style: .medium)
     private let notifySwitch = UISwitch()
     private let notifyLabel = UILabel()
-    private var notifyTask: Task<Void, Never>?
+    private var cancelSubscription: (() -> Void)?
     private var isBusy = false
 
     private var cacheKey: String {
@@ -82,7 +82,7 @@ class BZConsoleViewController: UIViewController {
         connectionWatch.start(peripheral: peripheral, navigationController: navigationController)
         if action == .notify || action == .indicate {
             let entry = DemoConsoleStore.shared.entry(for: cacheKey)
-            if entry.isOn, notifyTask == nil {
+            if entry.isOn, cancelSubscription == nil {
                 notifySwitch.isOn = true
                 updateNotifyLabel(on: true)
                 startSubscription()
@@ -102,8 +102,8 @@ class BZConsoleViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         connectionWatch.stop()
-        notifyTask?.cancel()
-        notifyTask = nil
+        cancelSubscription?()
+        cancelSubscription = nil
         persist()
     }
 
@@ -223,8 +223,8 @@ class BZConsoleViewController: UIViewController {
             Task { @MainActor in
                 defer { self.setBusy(false) }
                 do {
-                    _ = try await peripheral.write(characteristic, data)
-                    self.append("\(self.action.title) \(DemoHex.string(from: data))")
+                    let written = try await peripheral.writeCharacteristic(characteristic, data)
+                    self.append("\(self.action.title) \(written.uuid.uuidString) \(DemoHex.string(from: data))")
                 } catch {
                     self.append("\(self.action.title) failed: \(error.localizedDescription)")
                 }
@@ -241,30 +241,44 @@ class BZConsoleViewController: UIViewController {
         if enabled {
             startSubscription()
         } else {
-            notifyTask?.cancel()
-            notifyTask = nil
+            cancelSubscription?()
+            cancelSubscription = nil
         }
     }
 
     private func startSubscription() {
         guard let peripheral = peripheral, let characteristic = characteristic else { return }
-        notifyTask?.cancel()
-        let stream: AsyncThrowingStream<Data, Error> = action == .notify
-            ? peripheral.notify(characteristic)
-            : peripheral.indicate(characteristic)
-        notifyTask = Task { @MainActor in
-            do {
-                for try await data in stream {
-                    self.append("\(self.action.title) \(DemoHex.string(from: data))")
-                }
-            } catch {
-                if !Task.isCancelled {
-                    self.append("\(self.action.title) failed: \(error.localizedDescription)")
+        cancelSubscription?()
+        cancelSubscription = nil
+        let state: BZPeripheral.NotifyHandler = { characteristic, error in
+            let title = self.action.title
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.append("\(title) state failed: \(error.localizedDescription)")
                     self.notifySwitch.isOn = false
                     self.updateNotifyLabel(on: false)
+                    self.cancelSubscription?()
+                    self.cancelSubscription = nil
                     self.persist()
+                    return
                 }
+                self.append("\(title) state \(characteristic?.uuid.uuidString ?? "")")
             }
+        }
+        let value: BZPeripheral.NotifyHandler = { characteristic, error in
+            let title = self.action.title
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.append("\(title) failed: \(error.localizedDescription)")
+                    return
+                }
+                self.append("\(title) \(DemoHex.string(from: characteristic?.value ?? Data()))")
+            }
+        }
+        if action == .notify {
+            cancelSubscription = peripheral.setNotify(characteristic, state: state, value: value)
+        } else {
+            cancelSubscription = peripheral.setIndicate(characteristic, state: state, value: value)
         }
     }
 

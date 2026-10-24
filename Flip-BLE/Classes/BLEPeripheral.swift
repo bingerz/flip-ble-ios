@@ -35,10 +35,15 @@ public final class BLEPeripheral: NSObject {
     public let peripheral: BZPeripheral
     public var rssi: NSNumber?
 
+    private let connectionBridge = BLEPeripheralConnectionBridge()
+    private let connectionLock = NSLock()
+    private var connectionContinuations: [UUID: AsyncStream<BLEConnectionEvent>.Continuation] = [:]
+
     public init(_ peripheral: BZPeripheral) {
         self.peripheral = peripheral
         self.rssi = peripheral.scannedRSSINumber
         super.init()
+        connectionBridge.owner = self
     }
 
     public var name: String? {
@@ -173,6 +178,196 @@ public final class BLEPeripheral: NSObject {
 
     public func indicate(service: CBUUID, characteristic: CBUUID) -> AsyncThrowingStream<Data, Error> {
         subscribe(service: service, characteristic: characteristic, notify: false)
+    }
+
+    public func connect() -> Bool {
+        peripheral.connect()
+    }
+
+    public func disconnect() -> Bool {
+        peripheral.disconnect()
+    }
+
+    public func observeConnection() -> AsyncStream<BLEConnectionEvent>? {
+        let manager = BZCentralManager.default()
+        if let identifier = peripheral.uuidString, !identifier.isEmpty,
+           let existing = manager.getPeripheral(identifier), existing !== peripheral {
+            return nil
+        }
+        guard ownsConnection else { return nil }
+        peripheral.connectStateDelegate = connectionBridge
+        if let identifier = peripheral.uuidString, !identifier.isEmpty, manager.getPeripheral(identifier) == nil {
+            manager.add(peripheral)
+        }
+        return AsyncStream { continuation in
+            let id = UUID()
+            self.connectionLock.lock()
+            self.connectionContinuations[id] = continuation
+            self.connectionLock.unlock()
+            let token = retainedObjectToken(self)
+            continuation.onTermination = { @Sendable _ in
+                let owner: BLEPeripheral = takeRetainedObject(token)
+                owner.connectionLock.lock()
+                owner.connectionContinuations[id] = nil
+                owner.connectionLock.unlock()
+            }
+        }
+    }
+
+    public func detach() {
+        if ownsConnection, peripheral.connectStateDelegate != nil {
+            peripheral.connectStateDelegate = nil
+        }
+        let manager = BZCentralManager.default()
+        if let identifier = peripheral.uuidString, !identifier.isEmpty, manager.getPeripheral(identifier) === peripheral {
+            manager.remove(peripheral)
+        }
+        finishConnections()
+    }
+
+    @discardableResult
+    public func adopt(_ discovered: BZPeripheral) -> Bool {
+        guard peripheral.connectStateDelegate as AnyObject? === connectionBridge else { return false }
+        if let identifier = peripheral.uuidString, !identifier.isEmpty,
+           let existing = BZCentralManager.default().getPeripheral(identifier), existing !== peripheral {
+            return false
+        }
+        if let discoveredID = discovered.uuidString, !discoveredID.isEmpty,
+           let currentID = peripheral.uuidString, !currentID.isEmpty, discoveredID != currentID {
+            return false
+        }
+        if let replacement = discovered.blePeripheral {
+            peripheral.updateBLEPeripheral(replacement)
+        }
+        peripheral.scannedRSSINumber = discovered.scannedRSSINumber
+        rssi = discovered.scannedRSSINumber
+        return true
+    }
+
+    public func reportRetrieved() {
+        emitObserved(.retrieved(self))
+    }
+
+    public func reportRetrievedConnected() {
+        emitObserved(.retrievedConnected(self))
+    }
+
+    public func discoverIfIdle() async throws {
+        if peripheral.state == .discovering {
+            throw BLEError.invalidOperation("Discovery is already in progress")
+        }
+        try await discoverServices()
+    }
+
+    public func writeCharacteristic(_ characteristic: CBCharacteristic, _ value: Data) async throws -> CBCharacteristic {
+        try await yieldedCharacteristic { callback in
+            peripheral.write(withCharact: characteristic, value: value, callback: callback)
+        }
+    }
+
+    public func writeCharacteristic(service: CBUUID, characteristic: CBUUID, value: Data) async throws -> CBCharacteristic {
+        try await yieldedCharacteristic { callback in
+            peripheral.write(with: service, charactUUID: characteristic, value: value, callback: callback)
+        }
+    }
+
+    public func setNotify(_ characteristic: CBCharacteristic,
+                          state: @escaping BZPeripheral.NotifyHandler,
+                          value: @escaping BZPeripheral.NotifyHandler) -> () -> Void {
+        subscription(enable: {
+            peripheral.setNotifyWithCharact(characteristic, enable: true, stateCallback: state, valueCallback: value)
+        }, disable: {
+            let ignored: BZPeripheral.NotifyHandler = { _, _ in }
+            _ = self.peripheral.setNotifyWithCharact(characteristic, enable: false, stateCallback: ignored, valueCallback: ignored)
+        })
+    }
+
+    public func setNotify(service: CBUUID,
+                          characteristic: CBUUID,
+                          state: @escaping BZPeripheral.NotifyHandler,
+                          value: @escaping BZPeripheral.NotifyHandler) -> () -> Void {
+        subscription(enable: {
+            peripheral.setNotifyWith(service, charactUUID: characteristic, enable: true, stateCallback: state, valueCallback: value)
+        }, disable: {
+            let ignored: BZPeripheral.NotifyHandler = { _, _ in }
+            _ = self.peripheral.setNotifyWith(service, charactUUID: characteristic, enable: false, stateCallback: ignored, valueCallback: ignored)
+        })
+    }
+
+    public func setIndicate(_ characteristic: CBCharacteristic,
+                            state: @escaping BZPeripheral.IndicateHandler,
+                            value: @escaping BZPeripheral.IndicateHandler) -> () -> Void {
+        subscription(enable: {
+            peripheral.setIndicateWithCharact(characteristic, enable: true, stateCallback: state, valueCallback: value)
+        }, disable: {
+            let ignored: BZPeripheral.IndicateHandler = { _, _ in }
+            _ = self.peripheral.setIndicateWithCharact(characteristic, enable: false, stateCallback: ignored, valueCallback: ignored)
+        })
+    }
+
+    public func setIndicate(service: CBUUID,
+                            characteristic: CBUUID,
+                            state: @escaping BZPeripheral.IndicateHandler,
+                            value: @escaping BZPeripheral.IndicateHandler) -> () -> Void {
+        subscription(enable: {
+            peripheral.setIndicateWith(service, charactUUID: characteristic, enable: true, stateCallback: state, valueCallback: value)
+        }, disable: {
+            let ignored: BZPeripheral.IndicateHandler = { _, _ in }
+            _ = self.peripheral.setIndicateWith(service, charactUUID: characteristic, enable: false, stateCallback: ignored, valueCallback: ignored)
+        })
+    }
+
+    private var ownsConnection: Bool {
+        let delegate = peripheral.connectStateDelegate as AnyObject?
+        return delegate == nil || delegate === connectionBridge
+    }
+
+    fileprivate func receive(_ event: BLEConnectionEvent) {
+        emitObserved(event)
+    }
+
+    private func emitObserved(_ event: BLEConnectionEvent) {
+        guard peripheral.connectStateDelegate as AnyObject? === connectionBridge else { return }
+        connectionLock.lock()
+        let continuations = Array(connectionContinuations.values)
+        connectionLock.unlock()
+        continuations.forEach { $0.yield(event) }
+    }
+
+    private func finishConnections() {
+        connectionLock.lock()
+        let continuations = Array(connectionContinuations.values)
+        connectionContinuations.removeAll()
+        connectionLock.unlock()
+        continuations.forEach { $0.finish() }
+    }
+
+    private func yieldedCharacteristic(_ start: (@escaping BZPeripheral.WriteHandler) -> Bool) async throws -> CBCharacteristic {
+        try await withCheckedThrowingContinuation { continuation in
+            let gate = ResumeGate()
+            let started = start { characteristic, error in
+                gate.run {
+                    if let error = error {
+                        continuation.resume(throwing: BLEError(error))
+                    } else if let characteristic = characteristic {
+                        continuation.resume(returning: characteristic)
+                    } else {
+                        continuation.resume(throwing: BLEError.invalidOperation("Write returned no characteristic"))
+                    }
+                }
+            }
+            if !started {
+                gate.run {
+                    continuation.resume(throwing: BLEError.disconnected)
+                }
+            }
+        }
+    }
+
+    private func subscription(enable: () -> Bool, disable: @escaping () -> Void) -> () -> Void {
+        guard enable() else { return {} }
+        let cancel = SubscriptionCancel(disable)
+        return { cancel.call() }
     }
 
     private func readValue(_ start: (@escaping BZPeripheral.ReadHandler) -> Bool) async throws -> Data {
@@ -315,6 +510,73 @@ public final class BLEPeripheral: NSObject {
             }
         }
         return false
+    }
+}
+
+@available(iOS 13.0, *)
+final class BLEPeripheralConnectionBridge: NSObject, BZConnectStateDelegate {
+    weak var owner: BLEPeripheral?
+
+    func didConnecting(_ peripheral: BZPeripheral) {
+        emit(BLEConnectionEvent.connecting)
+    }
+
+    func didRetrieve(_ peripheral: BZPeripheral) {
+        emit(BLEConnectionEvent.retrieved)
+    }
+
+    func didRetrieveConnected(_ peripheral: BZPeripheral) {
+        emit(BLEConnectionEvent.retrievedConnected)
+    }
+
+    func didConnected(_ peripheral: BZPeripheral) {
+        emit(BLEConnectionEvent.connected)
+    }
+
+    func didConnectError(_ peripheral: BZPeripheral, error: Error?) {
+        guard let owner = owner else { return }
+        owner.receive(.failed(owner, error.map(BLEError.init) ?? .disconnected))
+    }
+
+    func didDisconnected(_ peripheral: BZPeripheral, error: Error?) {
+        guard let owner = owner else { return }
+        owner.receive(.disconnected(owner, error.map(BLEError.init)))
+    }
+
+    func didRestored(_ peripheral: BZPeripheral) {
+        emit(BLEConnectionEvent.restored)
+    }
+
+    private func emit(_ make: (BLEPeripheral) -> BLEConnectionEvent) {
+        guard let owner = owner else { return }
+        owner.receive(make(owner))
+    }
+}
+
+private final class SubscriptionCancel {
+    private let lock = NSLock()
+    private var cancelled = false
+    private let body: () -> Void
+
+    init(_ body: @escaping () -> Void) {
+        self.body = body
+    }
+
+    func call() {
+        let run = {
+            self.lock.lock()
+            let shouldRun = !self.cancelled
+            self.cancelled = true
+            self.lock.unlock()
+            if shouldRun {
+                self.body()
+            }
+        }
+        if Thread.isMainThread {
+            run()
+        } else {
+            DispatchQueue.main.async(execute: run)
+        }
     }
 }
 

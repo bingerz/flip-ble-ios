@@ -127,6 +127,22 @@ class BZOperationViewController: UITableViewController {
         tableView.tableHeaderView = header
     }
 
+    private func discoverMessage(for error: Error) -> String {
+        guard let bleError = error as? BLEError else { return error.localizedDescription }
+        switch bleError {
+        case .invalidOperation(let message):
+            return message
+        case .disconnected:
+            return "Device is disconnected"
+        case .gatt:
+            return "GATT error"
+        case .scanFailed:
+            return "Scan failed"
+        case .underlying(let underlying):
+            return underlying.localizedDescription
+        }
+    }
+
     private func refreshEmptyState() {
         DemoStyle.refreshEmptyState(for: tableView, rowCount: peripheral?.services.count ?? 0, text: "No services discovered\nTap Retry Discover to try again")
     }
@@ -145,10 +161,10 @@ class BZOperationViewController: UITableViewController {
                 self.refreshEmptyState()
             }
             do {
-                try await peripheral.discoverServices()
+                try await peripheral.discoverIfIdle()
                 self.tableView.reloadData()
             } catch {
-                let alert = UIAlertController(title: "Discover failed", message: error.localizedDescription, preferredStyle: .alert)
+                let alert = UIAlertController(title: "Discover failed", message: self.discoverMessage(for: error), preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default))
                 self.present(alert, animated: true)
             }

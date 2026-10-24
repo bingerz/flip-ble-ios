@@ -226,6 +226,10 @@ class BZHomeViewController: UITableViewController {
     private var isScanning = false
     private var stateTask: Task<Void, Never>?
     private var scanTask: Task<Void, Never>?
+    private var scanToken: NSObject?
+    private var connectionTasks: [ObjectIdentifier: Task<Void, Never>] = [:]
+    private var watchingConnections: Set<ObjectIdentifier> = []
+    private var requestedDisconnects: Set<ObjectIdentifier> = []
 
     private let headerView = UIView()
     private let filterStack = UIStackView()
@@ -246,6 +250,7 @@ class BZHomeViewController: UITableViewController {
         view.backgroundColor = DemoStyle.canvas
         tableView.backgroundColor = DemoStyle.canvas
         tableView.separatorStyle = .none
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Stress", style: .plain, target: self, action: #selector(openStressTest))
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Sort", style: .plain, target: self, action: #selector(sortDevices))
         tableView.register(DemoDeviceCell.self, forCellReuseIdentifier: cellId)
         tableView.rowHeight = UITableView.automaticDimension
@@ -254,6 +259,7 @@ class BZHomeViewController: UITableViewController {
         setupHeader()
         startCentral()
         NotificationCenter.default.addObserver(self, selector: #selector(deviceDisconnected(_:)), name: .demoPeripheralDisconnected, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(releaseDeviceForStress(_:)), name: .demoStressReleaseDevice, object: nil)
         refreshList()
     }
 
@@ -428,6 +434,9 @@ class BZHomeViewController: UITableViewController {
     }
 
     private func startCentral() {
+        for device in devices {
+            _ = beginWatch(device)
+        }
         let states = central.observeState()
         central.start(restoreIdentifier: "BZCentralManagerRestorationIdentifier", showPowerAlert: true)
         stateTask = Task { @MainActor in
@@ -464,17 +473,32 @@ class BZHomeViewController: UITableViewController {
         scanSpinner.startAnimating()
         refreshList()
         let advertisements = central.scan(services: scanServiceUUIDs(), allowDuplicates: true)
+        let token = NSObject()
+        scanToken = token
         scanTask = Task { @MainActor in
             for await advertisement in advertisements {
                 self.upsert(advertisement)
             }
+            self.scanEnded(token)
         }
     }
 
     private func stopScan() {
         scanTask?.cancel()
         scanTask = nil
+        scanToken = nil
         central.stopScan()
+        isScanning = false
+        DemoStyle.applyFilled(scanButton, title: "Start Scan", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
+        scanSpinner.stopAnimating()
+        refreshList()
+    }
+
+    /// Resets the scan button when another caller finishes this scan stream.
+    private func scanEnded(_ token: NSObject) {
+        guard scanToken === token, isScanning else { return }
+        scanTask = nil
+        scanToken = nil
         isScanning = false
         DemoStyle.applyFilled(scanButton, title: "Start Scan", color: DemoStyle.primaryFill, titleColor: DemoStyle.onPrimaryFill)
         scanSpinner.stopAnimating()
@@ -495,10 +519,12 @@ class BZHomeViewController: UITableViewController {
                     existing.state = .connected
                     changed = true
                 }
+                _ = beginWatch(existing)
             } else {
                 let device = DemoDevice(peripheral: peripheral, displayName: peripheral.name ?? "Unknown")
                 device.state = .connected
                 devices.insert(device, at: 0)
+                _ = beginWatch(device)
                 changed = true
             }
         }
@@ -513,11 +539,15 @@ class BZHomeViewController: UITableViewController {
         let incomingName = preferredName(advertisement)
         if let row = devices.firstIndex(where: { $0.identifier == identifier }) {
             let existing = devices[row]
+            if watchingConnections.contains(ObjectIdentifier(existing)) {
+                guard existing.peripheral.adopt(peripheral.peripheral) else { return }
+            } else {
+                existing.peripheral.rssi = advertisement.rssi ?? existing.peripheral.rssi
+            }
             if incomingName != "Unknown" {
                 existing.displayName = incomingName
             }
             existing.advertisementData = advertisement.advertisementData
-            existing.peripheral.rssi = advertisement.rssi ?? existing.peripheral.rssi
             if existing.state == .scanned,
                !DemoScanRules.passesFilters(
                    name: existing.displayName,
@@ -548,6 +578,10 @@ class BZHomeViewController: UITableViewController {
         return "Unknown"
     }
 
+    @objc private func openStressTest() {
+        navigationController?.pushViewController(BZStressTestViewController(), animated: true)
+    }
+
     @objc private func sortDevices() {
         devices.sort { ($0.peripheral.rssi?.intValue ?? Int.min) > ($1.peripheral.rssi?.intValue ?? Int.min) }
         refreshList()
@@ -555,29 +589,105 @@ class BZHomeViewController: UITableViewController {
 
     private func connect(_ device: DemoDevice) {
         guard device.state == .scanned else { return }
-        device.state = .connecting
-        refreshList()
+        guard beginWatch(device) else {
+            DemoFeedback.show(message: "Connection is already owned", in: view)
+            return
+        }
         stopScan()
-        refreshList()
-        Task { @MainActor in
-            do {
-                try await self.central.connect(device.peripheral)
-                try await device.peripheral.discoverServices()
-                device.state = .connected
-            } catch {
-                device.state = .scanned
-                DemoFeedback.show(message: "Connection failed: \(error.localizedDescription)", in: self.view)
-            }
-            self.refreshList()
+        if !device.peripheral.connect() {
+            device.peripheral.detach()
+            forgetWatch(device)
+            DemoFeedback.show(message: "Connection failed", in: view)
+            refreshList()
         }
     }
 
     private func disconnect(_ device: DemoDevice) {
         guard device.state == .connected else { return }
-        Task { @MainActor in
-            await self.central.disconnect(device.peripheral)
+        let id = ObjectIdentifier(device)
+        requestedDisconnects.insert(id)
+        if !device.peripheral.disconnect() {
+            requestedDisconnects.remove(id)
+        }
+    }
+
+    @discardableResult
+    private func beginWatch(_ device: DemoDevice) -> Bool {
+        let id = ObjectIdentifier(device)
+        if connectionTasks[id] != nil {
+            return true
+        }
+        guard let events = device.peripheral.observeConnection() else { return false }
+        watchingConnections.insert(id)
+        connectionTasks[id] = Task { @MainActor in
+            for await event in events {
+                self.apply(event, to: device)
+            }
+        }
+        return true
+    }
+
+    private func forgetWatch(_ device: DemoDevice) {
+        let id = ObjectIdentifier(device)
+        connectionTasks[id] = nil
+        watchingConnections.remove(id)
+    }
+
+    private func apply(_ event: BLEConnectionEvent, to device: DemoDevice) {
+        switch event {
+        case .connecting:
+            device.state = .connecting
+            refreshList()
+        case .connected, .restored, .retrievedConnected:
+            device.state = .connected
+            refreshList()
+            if case .connected = event {
+                discover(device)
+            }
+        case .failed(_, let error):
             device.state = .scanned
+            device.peripheral.detach()
+            forgetWatch(device)
+            refreshList()
+            DemoFeedback.show(message: "Connection failed: \(demoMessage(for: error))", in: view)
+        case .disconnected:
+            let requested = requestedDisconnects.remove(ObjectIdentifier(device)) != nil
+            device.state = .scanned
+            device.peripheral.detach()
+            forgetWatch(device)
+            refreshList()
+            if !requested {
+                DemoFeedback.show(message: "Device disconnected", in: view)
+            }
+        case .retrieved:
+            break
+        }
+    }
+
+    private func discover(_ device: DemoDevice) {
+        Task { @MainActor in
+            do {
+                try await device.peripheral.discoverIfIdle()
+            } catch {
+                DemoFeedback.show(message: "Discover failed: \(self.demoMessage(for: error))", in: self.view)
+            }
             self.refreshList()
+        }
+    }
+
+    private func demoMessage(for error: Error) -> String {
+        guard let bleError = error as? BLEError else { return error.localizedDescription }
+        switch bleError {
+        case .disconnected:
+            return "Device is disconnected"
+        case .invalidOperation(let message):
+            return message
+        case .gatt:
+            return "GATT error"
+        case .scanFailed:
+            return "Scan failed"
+        case .underlying(let underlying):
+            return underlying.localizedDescription
         }
     }
 
@@ -590,9 +700,27 @@ class BZHomeViewController: UITableViewController {
         navigationController?.pushViewController(controller, animated: true)
     }
 
+    /// Drops the scan list's connection watch so a live stress cycle can claim the same device.
+    @objc private func releaseDeviceForStress(_ notification: Notification) {
+        guard let identifier = notification.object as? String,
+              let device = devices.first(where: { $0.identifier == identifier }) else {
+            return
+        }
+        let id = ObjectIdentifier(device)
+        connectionTasks[id]?.cancel()
+        connectionTasks[id] = nil
+        watchingConnections.remove(id)
+        device.peripheral.detach()
+        device.state = .scanned
+        refreshList()
+    }
+
     @objc private func deviceDisconnected(_ notification: Notification) {
         guard let identifier = notification.object as? String,
               let device = devices.first(where: { $0.identifier == identifier }) else {
+            return
+        }
+        if watchingConnections.contains(ObjectIdentifier(device)) {
             return
         }
         if device.state == .connected {
